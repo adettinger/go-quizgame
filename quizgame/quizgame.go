@@ -8,7 +8,13 @@ import (
 	"io"
 	"os"
 	"reflect"
+	"time"
 )
+
+type quizgame struct {
+	problems []problem
+	score    int
+}
 
 type problem struct {
 	question string
@@ -20,8 +26,21 @@ func (p problem) String() string {
 }
 
 // TODO: Take out as a param (dependency inject)
-func StartGame(in io.Reader) {
-	reader := bufio.NewScanner(in)
+func QuizGame(in io.Reader) {
+	// TODO: Take flag for question file name
+	game := setupGame()
+	quizCompleted := make(chan bool, 1)
+	go game.startGame(in, quizCompleted)
+	select {
+	case <-quizCompleted:
+	case <-time.After(5 * time.Second):
+		fmt.Println("Time's up!")
+	}
+
+	fmt.Printf("Final score: %d out of %d\n", game.score, len(game.problems))
+}
+
+func setupGame() quizgame {
 	problems, err := parseProblems("problems.csv")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
@@ -32,19 +51,22 @@ func StartGame(in io.Reader) {
 	for _, problem := range problems {
 		fmt.Println(problem.String())
 	}
+	return quizgame{problems, 0}
+}
 
-	score := 0
-	for _, problem := range problems {
+func (qg *quizgame) startGame(in io.Reader, done chan<- bool) {
+	reader := bufio.NewScanner(in)
+	for _, problem := range qg.problems {
 		fmt.Println(problem.question)
 		answer := readLine(reader)
 		if answer == problem.answer {
 			fmt.Println("Correct!")
-			score++
+			qg.score++
 		} else {
 			fmt.Println("Wrong Answer!")
 		}
 	}
-	fmt.Printf("Final score: %d out of %d\n", score, len(problems))
+	done <- true
 }
 
 func readLine(in *bufio.Scanner) string {

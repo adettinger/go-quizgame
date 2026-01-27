@@ -9,5 +9,5 @@ import (
 
 func main() {
 	fmt.Println("Welcome to quizgame!")
-	quizgame.StartGame(os.Stdin)
+	quizgame.QuizGame(os.Stdin)
 }
