@@ -27,9 +27,9 @@ func (p problem) String() string {
 }
 
 // TODO: Take out as a param (dependency inject)
-func QuizGame(in io.Reader, timeLimit int, random bool) {
+func QuizGame(in io.Reader, fileName string, timeLimit int, random bool) {
 	// TODO: Take flag for question file name
-	game := setupGame(random)
+	game := setupGame(fileName, random)
 	quizCompleted := make(chan bool, 1)
 	go game.startGame(in, quizCompleted)
 	select {
@@ -41,8 +41,8 @@ func QuizGame(in io.Reader, timeLimit int, random bool) {
 	fmt.Printf("Final score: %d out of %d\n", game.score, len(game.problems))
 }
 
-func setupGame(random bool) quizgame {
-	problems, err := parseProblems("problems.csv")
+func setupGame(fileName string, random bool) quizgame {
+	problems, err := parseProblems(fileName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
