@@ -27,9 +27,7 @@ func (p problem) String() string {
 	return fmt.Sprintf("question: %v, answer: %v", p.question, p.answer)
 }
 
-// TODO: Take out as a param (dependency inject)
 func QuizGame(in io.Reader, fileName string, timeLimit int, random bool) {
-	// TODO: Take flag for question file name
 	game := setupGame(fileName, random)
 	quizCompleted := make(chan bool, 1)
 	go game.startGame(in, quizCompleted)
