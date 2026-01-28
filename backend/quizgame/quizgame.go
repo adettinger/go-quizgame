@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math/rand"
 	"os"
 	"reflect"
 	"time"
@@ -26,30 +27,33 @@ func (p problem) String() string {
 }
 
 // TODO: Take out as a param (dependency inject)
-func QuizGame(in io.Reader) {
+func QuizGame(in io.Reader, timeLimit int, random bool) {
 	// TODO: Take flag for question file name
-	game := setupGame()
+	game := setupGame(random)
 	quizCompleted := make(chan bool, 1)
 	go game.startGame(in, quizCompleted)
 	select {
 	case <-quizCompleted:
-	case <-time.After(5 * time.Second):
+	case <-time.After(time.Duration(timeLimit) * time.Second):
 		fmt.Println("Time's up!")
 	}
 
 	fmt.Printf("Final score: %d out of %d\n", game.score, len(game.problems))
 }
 
-func setupGame() quizgame {
+func setupGame(random bool) quizgame {
 	problems, err := parseProblems("problems.csv")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Printf("Read %d problems", len(problems))
+	fmt.Printf("Read %d problems\n", len(problems))
 
-	for _, problem := range problems {
-		fmt.Println(problem.String())
+	if random {
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		r.Shuffle(len(problems), func(i, j int) {
+			problems[i], problems[j] = problems[j], problems[i]
+		})
 	}
 	return quizgame{problems, 0}
 }
