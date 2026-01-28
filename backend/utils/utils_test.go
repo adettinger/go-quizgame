@@ -1,6 +1,10 @@
-package quizgame
+package utils_test
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/adettinger/go-quizgame/utils"
+)
 
 func TestCleanInput(t *testing.T) {
 	cases := []struct {
@@ -13,7 +17,7 @@ func TestCleanInput(t *testing.T) {
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			got := cleanInput(tt.input)
+			got := utils.CleanInput(tt.input)
 			if got != tt.want {
 				t.Errorf("Got %q, expected %q", got, tt.want)
 			}

@@ -2,29 +2,20 @@ package quizgame
 
 import (
 	"bufio"
-	"encoding/csv"
-	"errors"
 	"fmt"
 	"io"
 	"math/rand"
 	"os"
-	"reflect"
-	"strings"
 	"time"
+
+	"github.com/adettinger/go-quizgame/csvparser"
+	"github.com/adettinger/go-quizgame/problem"
+	"github.com/adettinger/go-quizgame/utils"
 )
 
 type quizgame struct {
-	problems []problem
+	problems []problem.Problem
 	score    int
-}
-
-type problem struct {
-	question string
-	answer   string
-}
-
-func (p problem) String() string {
-	return fmt.Sprintf("question: %v, answer: %v", p.question, p.answer)
 }
 
 func QuizGame(in io.Reader, fileName string, timeLimit int, random bool) {
@@ -41,7 +32,7 @@ func QuizGame(in io.Reader, fileName string, timeLimit int, random bool) {
 }
 
 func setupGame(fileName string, random bool) quizgame {
-	problems, err := parseProblems(fileName)
+	problems, err := csvparser.ParseProblems(fileName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
@@ -60,9 +51,9 @@ func setupGame(fileName string, random bool) quizgame {
 func (qg *quizgame) startGame(in io.Reader, done chan<- bool) {
 	reader := bufio.NewScanner(in)
 	for _, problem := range qg.problems {
-		fmt.Println(problem.question)
-		answer := cleanInput(readLine(reader))
-		if answer == problem.answer {
+		fmt.Println(problem.Question)
+		answer := utils.CleanInput(readLine(reader))
+		if answer == problem.Answer {
 			fmt.Println("Correct!")
 			qg.score++
 		} else {
@@ -75,43 +66,4 @@ func (qg *quizgame) startGame(in io.Reader, done chan<- bool) {
 func readLine(in *bufio.Scanner) string {
 	in.Scan()
 	return in.Text()
-
-}
-
-func parseProblems(fileName string) ([]problem, error) {
-	file, err := os.Open(fileName)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to open problems file. %v", err.Error())
-	}
-	reader := csv.NewReader(file)
-
-	expectedFieldCount := reflect.TypeOf(problem{}).NumField()
-	lineCount := 0
-	problems := make([]problem, 0)
-	for {
-		record, err := reader.Read()
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-			return nil, fmt.Errorf("Failed to parse problems. %v", err.Error())
-		}
-		lineCount++
-		if len(record) != expectedFieldCount {
-			return nil, fmt.Errorf("Expected %d columns per row. Found %d on line %d", expectedFieldCount, len(record), lineCount)
-		}
-		problems = append(problems, problem{
-			question: record[0],
-			answer:   cleanInput(record[1]),
-		})
-	}
-	if lineCount == 0 {
-		return nil, errors.New("Expected to found at least 1 problem. Found 0")
-	}
-
-	return problems, nil
-}
-
-func cleanInput(input string) string {
-	return strings.ToLower(strings.TrimSpace(input))
 }
