@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"os"
 	"reflect"
+	"strings"
 	"time"
 )
 
@@ -62,7 +63,7 @@ func (qg *quizgame) startGame(in io.Reader, done chan<- bool) {
 	reader := bufio.NewScanner(in)
 	for _, problem := range qg.problems {
 		fmt.Println(problem.question)
-		answer := readLine(reader)
+		answer := cleanInput(readLine(reader))
 		if answer == problem.answer {
 			fmt.Println("Correct!")
 			qg.score++
@@ -103,7 +104,7 @@ func parseProblems(fileName string) ([]problem, error) {
 		}
 		problems = append(problems, problem{
 			question: record[0],
-			answer:   record[1],
+			answer:   cleanInput(record[1]),
 		})
 	}
 	if lineCount == 0 {
@@ -111,4 +112,8 @@ func parseProblems(fileName string) ([]problem, error) {
 	}
 
 	return problems, nil
+}
+
+func cleanInput(input string) string {
+	return strings.ToLower(strings.TrimSpace(input))
 }
