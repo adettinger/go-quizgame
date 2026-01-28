@@ -17,6 +17,7 @@ func ParseProblems(fileName string) ([]problem.Problem, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Failed to open problems file. %v", err.Error())
 	}
+	defer file.Close()
 	reader := csv.NewReader(file)
 
 	expectedFieldCount := reflect.TypeOf(problem.Problem{}).NumField()
