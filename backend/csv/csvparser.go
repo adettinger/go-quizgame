@@ -1,4 +1,4 @@
-package csvparser
+package csv
 
 import (
 	"encoding/csv"
@@ -45,4 +45,22 @@ func ParseProblems(fileName string) ([]problem.Problem, error) {
 	}
 
 	return problems, nil
+}
+
+func WriteProblems(fileName string, problems []problem.Problem) error {
+	file, err := os.OpenFile(fileName, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+	if err != nil {
+		return errors.New("Failed to open file")
+	}
+	buffer := make([][]string, len(problems))
+	for i, p := range problems {
+		buffer[i] = p.ToStringSlice()
+	}
+	writer := csv.NewWriter(file)
+	err = writer.WriteAll(buffer)
+	if err != nil {
+		return errors.New("Failed to write to file")
+	}
+
+	return nil
 }

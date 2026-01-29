@@ -28,7 +28,7 @@ func main() {
 	router.GET("/problem/:index", controller.GetProblemByIndex)
 	router.DELETE("/problem/:index", controller.DeleteProblem)
 	router.POST("/problem", controller.AddProblem)
-	router.POST("/")
+	router.POST("/problem/save", controller.SaveProblems)
 
 	router.Run("localhost:8080")
 }

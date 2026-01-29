@@ -70,6 +70,17 @@ func (wc Controller) AddProblem(c *gin.Context) {
 	c.IndentedJSON(http.StatusCreated, problem)
 }
 
+func (wc Controller) SaveProblems(c *gin.Context) {
+	err := wc.ds.SaveProblems()
+	if err != nil {
+		fmt.Println(err)
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to save problems"})
+		return
+	}
+	// TODO: Is this correct http code?
+	c.IndentedJSON(http.StatusAccepted, gin.H{"message": "Saved problems"})
+}
+
 func parseIndex(c *gin.Context) (int, error) {
 	input := c.Param("index")
 	index, err := strconv.Atoi(input)

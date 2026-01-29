@@ -10,3 +10,7 @@ type Problem struct {
 func (p Problem) String() string {
 	return fmt.Sprintf("question: %v, answer: %v", p.Question, p.Answer)
 }
+
+func (p Problem) ToStringSlice() []string {
+	return []string{p.Question, p.Answer}
+}

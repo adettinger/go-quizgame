@@ -8,7 +8,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/adettinger/go-quizgame/csvparser"
+	"github.com/adettinger/go-quizgame/csv"
 	"github.com/adettinger/go-quizgame/problem"
 	"github.com/adettinger/go-quizgame/utils"
 )
@@ -32,7 +32,7 @@ func QuizGame(in io.Reader, fileName string, timeLimit int, random bool) {
 }
 
 func setupGame(fileName string, random bool) quizgame {
-	problems, err := csvparser.ParseProblems(fileName)
+	problems, err := csv.ParseProblems(fileName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)

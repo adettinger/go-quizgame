@@ -4,23 +4,27 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/adettinger/go-quizgame/csvparser"
+	"github.com/adettinger/go-quizgame/csv"
 	"github.com/adettinger/go-quizgame/problem"
 )
 
 type DataStore struct {
+	fileName string
 	problems []problem.Problem
 	mu       sync.RWMutex
+	modified bool
 }
 
 func NewDataStore(fileName string) (*DataStore, error) {
-	problems, err := csvparser.ParseProblems(fileName)
+	problems, err := csv.ParseProblems(fileName)
 	if err != nil {
 		return nil, err
 	}
 	return &DataStore{
+		fileName: fileName,
 		problems: problems,
 		mu:       sync.RWMutex{},
+		modified: false,
 	}, nil
 }
 
@@ -52,6 +56,7 @@ func (ds *DataStore) DeleteProblemByIndex(index int) error {
 	}
 
 	ds.problems = append(ds.problems[:index], ds.problems[index+1:]...)
+	ds.modified = true
 	return nil
 }
 
@@ -59,4 +64,16 @@ func (ds *DataStore) AddProblem(problem problem.Problem) {
 	ds.mu.Lock()
 	defer ds.mu.Unlock()
 	ds.problems = append(ds.problems, problem)
+	ds.modified = true
+}
+
+func (ds *DataStore) SaveProblems() error {
+	if !ds.modified {
+		return errors.New("No modifications to save")
+	}
+	err := csv.WriteProblems(ds.fileName, ds.problems)
+	if err != nil {
+		return err
+	}
+	return nil
 }
