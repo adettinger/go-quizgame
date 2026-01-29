@@ -54,3 +54,9 @@ func (ds *DataStore) DeleteProblemByIndex(index int) error {
 	ds.problems = append(ds.problems[:index], ds.problems[index+1:]...)
 	return nil
 }
+
+func (ds *DataStore) AddProblem(problem problem.Problem) {
+	ds.mu.Lock()
+	defer ds.mu.Unlock()
+	ds.problems = append(ds.problems, problem)
+}

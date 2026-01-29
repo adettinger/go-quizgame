@@ -15,14 +15,20 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	controller := webserver.NewProblemController(ds)
 
+	controller := webserver.NewProblemController(ds)
 	router := gin.Default()
+
+	// Server health
 	router.GET("/ping", controller.Ping)
 	router.GET("/hello", controller.HelloWorld)
-	router.GET("/listProblems", controller.ListProblems)
+
+	// Problem related
+	router.GET("/problem", controller.ListProblems)
 	router.GET("/problem/:index", controller.GetProblemByIndex)
-	router.GET("/problem/delete/:index", controller.DeleteProblem)
+	router.DELETE("/problem/:index", controller.DeleteProblem)
+	router.POST("/problem", controller.AddProblem)
+	router.POST("/")
 
 	router.Run("localhost:8080")
 }

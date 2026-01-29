@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/adettinger/go-quizgame/problem"
 	"github.com/gin-gonic/gin"
 )
 
@@ -34,13 +35,13 @@ func (wc Controller) ListProblems(c *gin.Context) {
 }
 
 func (wc Controller) GetProblemByIndex(c *gin.Context) {
-	index, err := getIndex(c)
+	index, err := parseIndex(c)
 	if err != nil {
 		return
 	}
 	problem, err := wc.ds.GetProblemByIndex(index)
 	if err != nil {
-		c.IndentedJSON(http.StatusOK, gin.H{"message": "error retrieving problem"})
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Index does not exist"})
 		return
 	}
 
@@ -48,15 +49,28 @@ func (wc Controller) GetProblemByIndex(c *gin.Context) {
 }
 
 func (wc Controller) DeleteProblem(c *gin.Context) {
-	index, err := getIndex(c)
+	index, err := parseIndex(c)
 	if err != nil {
 		return
 	}
 	err = wc.ds.DeleteProblemByIndex(index)
-	c.IndentedJSON(http.StatusOK, gin.H{"message": fmt.Sprintf("Deleted index %d", index)})
+	if err != nil {
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Index does not exist"})
+	}
+	c.IndentedJSON(http.StatusNoContent, gin.H{"message": fmt.Sprintf("Deleted index %d", index)})
 }
 
-func getIndex(c *gin.Context) (int, error) {
+func (wc Controller) AddProblem(c *gin.Context) {
+	var problem problem.Problem
+	if err := c.BindJSON(&problem); err != nil {
+		return
+	}
+
+	wc.ds.AddProblem(problem)
+	c.IndentedJSON(http.StatusCreated, problem)
+}
+
+func parseIndex(c *gin.Context) (int, error) {
 	input := c.Param("index")
 	index, err := strconv.Atoi(input)
 	if err != nil {
