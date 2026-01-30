@@ -29,6 +29,15 @@ func NewDataStore(fileName string) (*DataStore, error) {
 	}, nil
 }
 
+func NewDataStoreFromData(problems []models.Problem) (*DataStore, error) {
+	return &DataStore{
+		fileName: "ignore",
+		problems: problems,
+		mu:       sync.RWMutex{},
+		modified: false,
+	}, nil
+}
+
 func (ds *DataStore) ListProblems() []models.Problem {
 	ds.mu.RLock()
 	defer ds.mu.RUnlock()
@@ -39,14 +48,16 @@ func (ds *DataStore) ListProblems() []models.Problem {
 	return problemsCopy
 }
 
-func (ds *DataStore) GetProblemByIndex(index int) (models.Problem, error) {
+func (ds *DataStore) GetProblemById(uuid uuid.UUID) (models.Problem, error) {
 	ds.mu.RLock()
 	defer ds.mu.RUnlock()
-	if index < 0 || index > (len(ds.problems)-1) {
-		return models.Problem{}, errors.New("Index out of bounds")
-	}
 
-	return ds.problems[index], nil
+	for _, p := range ds.problems {
+		if p.Id == uuid {
+			return p, nil
+		}
+	}
+	return models.Problem{}, errors.New("Problem not found")
 }
 
 func (ds *DataStore) DeleteProblemByIndex(id uuid.UUID) error {
@@ -72,7 +83,7 @@ func (ds *DataStore) DeleteProblemByIndex(id uuid.UUID) error {
 
 func (ds *DataStore) AddProblem(pr models.CreateProblemRequest) models.Problem {
 	problem := models.Problem{
-		Id:       ds.GetNewId(),
+		Id:       ds.getNewId(),
 		Question: pr.Question,
 		Answer:   pr.Answer,
 	}
@@ -97,7 +108,7 @@ func (ds *DataStore) SaveProblems() error {
 	return nil
 }
 
-func (ds *DataStore) GetNewId() uuid.UUID {
+func (ds *DataStore) getNewId() uuid.UUID {
 	for {
 		uuid := uuid.New()
 		if !ds.problemIdExists(uuid) {
@@ -109,16 +120,4 @@ func (ds *DataStore) GetNewId() uuid.UUID {
 func (ds *DataStore) problemIdExists(uuid uuid.UUID) bool {
 	_, err := ds.GetProblemById(uuid)
 	return err == nil
-}
-
-func (ds *DataStore) GetProblemById(uuid uuid.UUID) (models.Problem, error) {
-	ds.mu.RLock()
-	defer ds.mu.RUnlock()
-
-	for _, p := range ds.problems {
-		if p.Id == uuid {
-			return p, nil
-		}
-	}
-	return models.Problem{}, errors.New("Problem not found")
 }
