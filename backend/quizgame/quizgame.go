@@ -9,12 +9,12 @@ import (
 	"time"
 
 	"github.com/adettinger/go-quizgame/csv"
-	"github.com/adettinger/go-quizgame/problem"
+	"github.com/adettinger/go-quizgame/models"
 	"github.com/adettinger/go-quizgame/utils"
 )
 
 type quizgame struct {
-	problems []problem.Problem
+	problems []models.Problem
 	score    int
 }
 

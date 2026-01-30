@@ -5,12 +5,13 @@ import (
 	"sync"
 
 	"github.com/adettinger/go-quizgame/csv"
-	"github.com/adettinger/go-quizgame/problem"
+	"github.com/adettinger/go-quizgame/models"
+	"github.com/google/uuid"
 )
 
 type DataStore struct {
 	fileName string
-	problems []problem.Problem
+	problems []models.Problem
 	mu       sync.RWMutex
 	modified bool
 }
@@ -28,21 +29,21 @@ func NewDataStore(fileName string) (*DataStore, error) {
 	}, nil
 }
 
-func (ds *DataStore) ListProblems() []problem.Problem {
+func (ds *DataStore) ListProblems() []models.Problem {
 	ds.mu.RLock()
 	defer ds.mu.RUnlock()
 
 	// Return a copy to prevent external modification TODO: Needed?
-	problemsCopy := make([]problem.Problem, len(ds.problems))
+	problemsCopy := make([]models.Problem, len(ds.problems))
 	copy(problemsCopy, ds.problems)
 	return problemsCopy
 }
 
-func (ds *DataStore) GetProblemByIndex(index int) (problem.Problem, error) {
+func (ds *DataStore) GetProblemByIndex(index int) (models.Problem, error) {
 	ds.mu.RLock()
 	defer ds.mu.RUnlock()
 	if index < 0 || index > (len(ds.problems)-1) {
-		return problem.Problem{}, errors.New("Index out of bounds")
+		return models.Problem{}, errors.New("Index out of bounds")
 	}
 
 	return ds.problems[index], nil
@@ -60,14 +61,23 @@ func (ds *DataStore) DeleteProblemByIndex(index int) error {
 	return nil
 }
 
-func (ds *DataStore) AddProblem(problem problem.Problem) {
+func (ds *DataStore) AddProblem(pr models.CreateProblemRequest) models.Problem {
+	problem := models.Problem{
+		Id:       ds.GetNewId(),
+		Question: pr.Question,
+		Answer:   pr.Answer,
+	}
 	ds.mu.Lock()
 	defer ds.mu.Unlock()
+
 	ds.problems = append(ds.problems, problem)
 	ds.modified = true
+	return problem
 }
 
 func (ds *DataStore) SaveProblems() error {
+	ds.mu.RLock()
+	defer ds.mu.RUnlock()
 	if !ds.modified {
 		return errors.New("No modifications to save")
 	}
@@ -76,4 +86,30 @@ func (ds *DataStore) SaveProblems() error {
 		return err
 	}
 	return nil
+}
+
+func (ds *DataStore) GetNewId() uuid.UUID {
+	for {
+		uuid := uuid.New()
+		if !ds.problemIdExists(uuid) {
+			return uuid
+		}
+	}
+}
+
+func (ds *DataStore) problemIdExists(uuid uuid.UUID) bool {
+	_, err := ds.GetById(uuid)
+	return err == nil
+}
+
+func (ds *DataStore) GetById(uuid uuid.UUID) (models.Problem, error) {
+	ds.mu.RLock()
+	defer ds.mu.RUnlock()
+
+	for _, p := range ds.problems {
+		if p.Id == uuid {
+			return p, nil
+		}
+	}
+	return models.Problem{}, errors.New("Problem not found")
 }

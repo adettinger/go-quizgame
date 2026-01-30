@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/adettinger/go-quizgame/problem"
+	"github.com/adettinger/go-quizgame/models"
 	"github.com/gin-gonic/gin"
 )
 
@@ -61,12 +61,13 @@ func (wc Controller) DeleteProblem(c *gin.Context) {
 }
 
 func (wc Controller) AddProblem(c *gin.Context) {
-	var problem problem.Problem
-	if err := c.BindJSON(&problem); err != nil {
+	var problemRequest models.CreateProblemRequest
+	if err := c.BindJSON(&problemRequest); err != nil {
 		return
 	}
+	fmt.Println("Bound problem request")
 
-	wc.ds.AddProblem(problem)
+	problem := wc.ds.AddProblem(problemRequest)
 	c.IndentedJSON(http.StatusCreated, problem)
 }
 
