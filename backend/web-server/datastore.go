@@ -49,14 +49,23 @@ func (ds *DataStore) GetProblemByIndex(index int) (models.Problem, error) {
 	return ds.problems[index], nil
 }
 
-func (ds *DataStore) DeleteProblemByIndex(index int) error {
+func (ds *DataStore) DeleteProblemByIndex(id uuid.UUID) error {
 	ds.mu.Lock()
 	defer ds.mu.Unlock()
-	if index < 0 || index > (len(ds.problems)-1) {
-		return errors.New("Index out of bounds")
+
+	foundIndex := -1
+	for i, p := range ds.problems {
+		if p.Id == id {
+			foundIndex = i
+			break
+		}
 	}
 
-	ds.problems = append(ds.problems[:index], ds.problems[index+1:]...)
+	if foundIndex == -1 {
+		return errors.New("Id not found")
+	}
+
+	ds.problems = append(ds.problems[:foundIndex], ds.problems[foundIndex+1:]...)
 	ds.modified = true
 	return nil
 }
@@ -98,11 +107,11 @@ func (ds *DataStore) GetNewId() uuid.UUID {
 }
 
 func (ds *DataStore) problemIdExists(uuid uuid.UUID) bool {
-	_, err := ds.GetById(uuid)
+	_, err := ds.GetProblemById(uuid)
 	return err == nil
 }
 
-func (ds *DataStore) GetById(uuid uuid.UUID) (models.Problem, error) {
+func (ds *DataStore) GetProblemById(uuid uuid.UUID) (models.Problem, error) {
 	ds.mu.RLock()
 	defer ds.mu.RUnlock()
 

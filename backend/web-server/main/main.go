@@ -25,8 +25,8 @@ func main() {
 
 	// Problem related
 	router.GET("/problem", controller.ListProblems)
-	router.GET("/problem/:index", controller.GetProblemByIndex)
-	router.DELETE("/problem/:index", controller.DeleteProblem)
+	router.GET("/problem/:id", controller.GetProblemById)
+	router.DELETE("/problem/:id", controller.DeleteProblem)
 	router.POST("/problem", controller.AddProblem)
 	router.POST("/problem/save", controller.SaveProblems)
 

@@ -8,6 +8,7 @@ import (
 
 	"github.com/adettinger/go-quizgame/models"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type Controller struct {
@@ -31,33 +32,35 @@ func (wc Controller) HelloWorld(c *gin.Context) {
 }
 
 func (wc Controller) ListProblems(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, wc.ds.ListProblems())
+	c.JSON(http.StatusOK, wc.ds.ListProblems())
 }
 
-func (wc Controller) GetProblemByIndex(c *gin.Context) {
-	index, err := parseIndex(c)
+func (wc Controller) GetProblemById(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid UUID"})
 		return
 	}
-	problem, err := wc.ds.GetProblemByIndex(index)
+	problem, err := wc.ds.GetProblemById(id)
 	if err != nil {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Index does not exist"})
+		c.JSON(http.StatusNotFound, gin.H{"message": "Id does not exist"})
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, problem)
+	c.JSON(http.StatusOK, problem)
 }
 
 func (wc Controller) DeleteProblem(c *gin.Context) {
-	index, err := parseIndex(c)
+	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid UUID"})
 		return
 	}
-	err = wc.ds.DeleteProblemByIndex(index)
+	err = wc.ds.DeleteProblemByIndex(id)
 	if err != nil {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Index does not exist"})
+		c.JSON(http.StatusNotFound, gin.H{"message": "Index does not exist"})
 	}
-	c.IndentedJSON(http.StatusNoContent, gin.H{"message": fmt.Sprintf("Deleted index %d", index)})
+	c.JSON(http.StatusNoContent, struct{}{})
 }
 
 func (wc Controller) AddProblem(c *gin.Context) {
@@ -68,25 +71,25 @@ func (wc Controller) AddProblem(c *gin.Context) {
 	fmt.Println("Bound problem request")
 
 	problem := wc.ds.AddProblem(problemRequest)
-	c.IndentedJSON(http.StatusCreated, problem)
+	c.JSON(http.StatusCreated, problem)
 }
 
 func (wc Controller) SaveProblems(c *gin.Context) {
 	err := wc.ds.SaveProblems()
 	if err != nil {
 		fmt.Println(err)
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Failed to save problems"})
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to save problems"})
 		return
 	}
 	// TODO: Is this correct http code?
-	c.IndentedJSON(http.StatusAccepted, gin.H{"message": "Saved problems"})
+	c.JSON(http.StatusAccepted, gin.H{"message": "Saved problems"})
 }
 
 func parseIndex(c *gin.Context) (int, error) {
 	input := c.Param("index")
 	index, err := strconv.Atoi(input)
 	if err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Bad index"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Bad index"})
 		return -1, errors.New("Bad index")
 	}
 	return index, nil

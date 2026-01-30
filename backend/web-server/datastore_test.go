@@ -32,15 +32,15 @@ func TestProblemIdExists(t *testing.T) {
 	})
 }
 
-func TestGetByID(t *testing.T) {
+func TestGetProblemByID(t *testing.T) {
 	t.Run("Find UUID exists", func(t *testing.T) {
-		result, err := ds.GetById(ds.problems[0].Id)
+		result, err := ds.GetProblemById(ds.problems[0].Id)
 		AssertNoError(t, err)
 		AssertEquals(t, ds.problems[0].Id, result.Id)
 	})
 
 	t.Run("UUID does not exist", func(t *testing.T) {
-		_, err := ds.GetById(uuid.MustParse("c620af48-3af0-4216-a229-65c539a00000"))
+		_, err := ds.GetProblemById(uuid.MustParse("c620af48-3af0-4216-a229-65c539a00000"))
 		AssertError(t, err)
 	})
 }
