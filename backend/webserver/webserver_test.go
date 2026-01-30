@@ -1,6 +1,7 @@
 package webserver_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -201,6 +202,74 @@ func TestDeleteProblem(t *testing.T) {
 				}
 			}
 
+		})
+	}
+}
+
+func TestAddProblem(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	cases := []struct {
+		name           string
+		requestBody    map[string]interface{}
+		validRequest   bool
+		expectedStatus int
+	}{
+		{
+			"Create problem",
+			map[string]interface{}{
+				"Question": "Test question",
+				"Answer":   "Test answer",
+			},
+			true,
+			http.StatusCreated,
+		},
+		{
+			"Invalid request",
+			map[string]interface{}{},
+			false,
+			http.StatusBadRequest,
+		},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			testDataStore, _ := webserver.NewDataStoreFromData(problemSet)
+			controller := webserver.NewProblemController(testDataStore)
+
+			w := httptest.NewRecorder()
+			router := gin.New()
+
+			// Set up the route
+			router.POST("/problem/", controller.AddProblem)
+
+			// Create the request
+			jsonBody, _ := json.Marshal(tt.requestBody)
+			req, _ := http.NewRequest("POST", "/problem/", bytes.NewBuffer(jsonBody))
+			req.Header.Set("Content-Type", "application/json")
+
+			router.ServeHTTP(w, req)
+
+			assert.Equal(t, tt.expectedStatus, w.Code)
+
+			// Check response body
+			if !tt.validRequest {
+				var responseBody gin.H
+				err := json.Unmarshal(w.Body.Bytes(), &responseBody)
+				assert.NoError(t, err)
+				assert.Equal(t, gin.H{"message": "Invalid request"}, responseBody)
+			} else {
+				var responseBody models.Problem
+				err := json.Unmarshal(w.Body.Bytes(), &responseBody)
+				assert.NoError(t, err)
+				assert.Equal(t, responseBody.Question, tt.requestBody["Question"])
+				assert.Equal(t, responseBody.Answer, tt.requestBody["Answer"])
+
+				// Assert problem exists
+				p, err := testDataStore.GetProblemById(responseBody.Id)
+				assert.NoError(t, err)
+				assert.Equal(t, tt.requestBody["Question"], p.Question)
+				assert.Equal(t, tt.requestBody["Answer"], p.Answer)
+			}
 		})
 	}
 }

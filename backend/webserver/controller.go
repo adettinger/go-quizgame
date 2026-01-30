@@ -65,10 +65,10 @@ func (wc Controller) DeleteProblem(c *gin.Context) {
 
 func (wc Controller) AddProblem(c *gin.Context) {
 	var problemRequest models.CreateProblemRequest
-	if err := c.BindJSON(&problemRequest); err != nil {
+	if err := c.BindJSON(&problemRequest); err != nil || problemRequest.Question == "" || problemRequest.Answer == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request"})
 		return
 	}
-	fmt.Println("Bound problem request")
 
 	problem := wc.ds.AddProblem(problemRequest)
 	c.JSON(http.StatusCreated, problem)
