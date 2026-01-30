@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	webserver "github.com/adettinger/go-quizgame/web-server"
+	"github.com/adettinger/go-quizgame/webserver"
 	"github.com/gin-gonic/gin"
 )
 
