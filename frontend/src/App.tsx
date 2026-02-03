@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css'
 import Welcome from './pages/Welcome';
 import NotFound from './pages/NotFound';
+import { ProblemsPage } from './pages/Problems';
 
 function App() {
 
@@ -13,6 +14,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Welcome />} />
           <Route path="/*" element={<NotFound />} />
+          <Route path="/problems" element={<ProblemsPage />} />
         </Routes>
       </div>
     </Router>
