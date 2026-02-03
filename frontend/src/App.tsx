@@ -4,24 +4,28 @@ import Welcome from './pages/Welcome';
 import NotFound from './pages/NotFound';
 import { ProblemsPage } from './pages/Problems';
 import NavBar from './components/NavBar/NavBar';
+import { Theme } from '@radix-ui/themes';
+import '@radix-ui/themes/styles.css';
 
 function App() {
 
   return (
     <Router>
       <div className='App'>
-        <NavBar />
-        <div className="container mt-4">
-          <div className='App-header'>
-            <h1>Quizgame</h1>
-          </div>
+        <Theme>
+          <NavBar />
+          <div className="container mt-4">
+            <div className='App-header'>
+              <h1>Quizgame</h1>
+            </div>
 
-          <Routes>
-            <Route path="/" element={<Welcome />} />
-            <Route path="/*" element={<NotFound />} />
-            <Route path="/problems" element={<ProblemsPage />} />
-          </Routes>
-        </div>
+            <Routes>
+              <Route path="/" element={<Welcome />} />
+              <Route path="/*" element={<NotFound />} />
+              <Route path="/problems" element={<ProblemsPage />} />
+            </Routes>
+          </div>
+        </Theme>
       </div>
     </Router>
   )

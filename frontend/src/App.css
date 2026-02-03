@@ -1,5 +1,7 @@
 .App {
     text-align: center;
+    background-color: beige;
+    /* Set so I can see visibility of app behind component*/
 }
 
 .App-logo {
