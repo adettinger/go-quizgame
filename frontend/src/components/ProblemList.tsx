@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useProblems } from '../hooks/useProblems';
 import { Table } from "@radix-ui/themes"
 
@@ -33,7 +34,9 @@ export function ProblemList() {
             <Table.Body>
                 {data.map((problem) => (
                     <Table.Row>
-                        <Table.RowHeaderCell>{problem.Id}</Table.RowHeaderCell>
+                        <Table.RowHeaderCell>
+                            <Link to={`/problem/${problem.Id}`}>{problem.Id}</Link>
+                        </Table.RowHeaderCell>
                         <Table.Cell>{problem.Question}</Table.Cell>
                         <Table.Cell>{problem.Answer}</Table.Cell>
                     </Table.Row>
@@ -41,23 +44,4 @@ export function ProblemList() {
             </Table.Body>
         </Table.Root>
     );
-
-    // return (
-    //     <div className="container mx-auto p-4">
-    //         <h2 className="text-2xl font-bold mb-4">Problems</h2>
-    //         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-    //             {data.map((problem) => (
-    //                 <div
-    //                     key={problem.Id}
-    //                     className="border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
-    //                 >
-    //                     <h3 className="font-semibold text-lg mb-2">Question:</h3>
-    //                     <p className="mb-4">{problem.Question}</p>
-    //                     <h3 className="font-semibold text-lg mb-2">Answer:</h3>
-    //                     <p>{problem.Answer}</p>
-    //                 </div>
-    //             ))}
-    //         </div>
-    //     </div>
-    // );
 }

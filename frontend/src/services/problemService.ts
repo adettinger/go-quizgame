@@ -11,3 +11,13 @@ export async function fetchProblems(): Promise<Problem[]> {
 
     return response.json();
 }
+
+export async function fetchProblemById(id: string): Promise<Problem> {
+    const response = await fetch(`${API_URL}/problem/${id}`);
+
+    if (!response.ok) {
+        throw new Error(`Error fetching problems: ${response.status}`);
+    }
+
+    return response.json();
+}
