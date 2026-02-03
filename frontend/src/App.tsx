@@ -7,6 +7,7 @@ import NavBar from './components/NavBar/NavBar';
 import { Theme } from '@radix-ui/themes';
 import '@radix-ui/themes/styles.css';
 import { ViewProblemPage } from './pages/ViewProblem';
+import { CreateProblemPage } from './pages/CreateProblem';
 
 function App() {
 
@@ -25,6 +26,7 @@ function App() {
               <Route path="/*" element={<NotFound />} />
               <Route path="/problems" element={<ProblemsPage />} />
               <Route path="/problem/:id" element={<ViewProblemPage />} />
+              <Route path="/problem/new" element={<CreateProblemPage />} />
             </Routes>
           </div>
         </Theme>
