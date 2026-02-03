@@ -1,0 +1,139 @@
+// Variables
+$primary-color: #3498db;
+$secondary-color: #2c3e50;
+$text-color: #333;
+$hover-color: darken($primary-color, 10%);
+$active-color: $primary-color;
+$nav-height: 60px;
+$transition-speed: 0.3s;
+
+// Navbar container
+.navbar {
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    height: $nav-height;
+    display: flex;
+    align-items: center;
+    padding: 0 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+
+    &-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    &-brand {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: $secondary-color;
+        text-decoration: none;
+
+        &:hover {
+            color: $primary-color;
+        }
+    }
+
+    &-nav {
+        display: flex;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+}
+
+// Nav items
+.nav-item {
+    margin: 0 0.5rem;
+    position: relative;
+
+    .nav-link {
+        color: $text-color;
+        text-decoration: none;
+        padding: 0.5rem 1rem;
+        font-size: 1rem;
+        font-weight: 500;
+        transition: color $transition-speed ease;
+        display: block;
+        position: relative;
+
+        &:hover {
+            color: $hover-color;
+        }
+
+        // Underline effect on hover
+        &::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 0;
+            left: 50%;
+            background-color: $primary-color;
+            transition: all $transition-speed ease;
+        }
+
+        &:hover::after {
+            width: 100%;
+            left: 0;
+        }
+
+        // Active state
+        &.active {
+            color: $active-color;
+            font-weight: 600;
+
+            &::after {
+                width: 100%;
+                left: 0;
+            }
+        }
+    }
+}
+
+// Responsive styles
+@media (max-width: 768px) {
+    .navbar {
+        padding: 0 1rem;
+
+        &-nav {
+            position: absolute;
+            top: $nav-height;
+            left: 0;
+            right: 0;
+            flex-direction: column;
+            background-color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height $transition-speed ease;
+
+            &.show {
+                max-height: 300px; // Adjust based on your menu size
+            }
+        }
+    }
+
+    .nav-item {
+        margin: 0;
+        width: 100%;
+
+        .nav-link {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+
+            &::after {
+                display: none;
+            }
+
+            &.active {
+                background-color: rgba($primary-color, 0.1);
+            }
+        }
+    }
+}
