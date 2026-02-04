@@ -37,8 +37,20 @@ export async function createProblem(data: ProblemFormData): Promise<any> {
     });
 
     if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
+        throw new Error(`Error creating problem: ${response.status}`);
     }
 
     return response.json();
 };
+
+export async function deleteProblemById(id: string): Promise<void> {
+    const response = await fetch(`${API_URL}/problem/${id}`, {
+        method: 'DELETE',
+    });
+
+    if (!response.ok) {
+        throw new Error(`Error deleting problems: ${response.status}`);
+    }
+
+    return response.json();
+}

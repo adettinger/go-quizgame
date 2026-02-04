@@ -1,9 +1,32 @@
 import { Link } from 'react-router-dom';
 import { useProblems } from '../hooks/useProblems';
-import { Flex, Table } from "@radix-ui/themes"
+import { Flex, IconButton, Table } from "@radix-ui/themes"
+import { TrashIcon } from '@radix-ui/react-icons';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { deleteProblemById } from '../services/problemService';
 
 export function ProblemList() {
+    const queryClient = useQueryClient();
+    // TODO: Toast
     const { data, isLoading, isError, error } = useProblems();
+
+    const deleteMutation = useMutation({
+        mutationFn: deleteProblemById,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['problems'] })
+            // queryClient.invalidateQueries({queryKey: ['problem', problem.id]})
+            // TODO: Re-trigger query
+        },
+        onError: (error) => {
+            console.log('Failed to delete problem', error)
+        },
+    })
+
+    const handleDelete = (id: string) => {
+        if (confirm('Are you sure you want to delete this problem?')) {
+            deleteMutation.mutate(id);
+        }
+    }
 
     if (isLoading) {
         return <div className="text-center p-4">Loading problems...</div>;
@@ -29,6 +52,7 @@ export function ProblemList() {
                         <Table.ColumnHeaderCell>ID</Table.ColumnHeaderCell>
                         <Table.ColumnHeaderCell>Question</Table.ColumnHeaderCell>
                         <Table.ColumnHeaderCell>Answer</Table.ColumnHeaderCell>
+                        <Table.ColumnHeaderCell>Actions</Table.ColumnHeaderCell>
                     </Table.Row>
                 </Table.Header>
 
@@ -40,6 +64,16 @@ export function ProblemList() {
                             </Table.RowHeaderCell>
                             <Table.Cell>{problem.Question}</Table.Cell>
                             <Table.Cell>{problem.Answer}</Table.Cell>
+                            <Table.Cell>
+                                <IconButton
+                                    color="red"
+                                    variant="soft"
+                                    onClick={() => { handleDelete(problem.Id) }}
+                                    disabled={deleteMutation.isPending}
+                                >
+                                    <TrashIcon />
+                                </IconButton>
+                            </Table.Cell>
                         </Table.Row>
                     ))}
                 </Table.Body>
