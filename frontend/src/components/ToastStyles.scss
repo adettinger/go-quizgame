@@ -1,0 +1,257 @@
+// ToastStyles.scss
+
+// Variables
+$toast-bg-color: #ffffff;
+$toast-boarder-color: #1f2937;
+$toast-success-color: #10b981; // Green
+$toast-error-color: #ef4444; // Red
+$toast-warning-color: #f59e0b; // Amber
+$toast-info-color: #3b82f6; // Blue
+$toast-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+$toast-border-radius: 6px;
+$toast-z-index: 9999;
+
+// Toast Viewport - Container for all toasts
+.ToastViewport {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 25px;
+    gap: 10px;
+    width: 390px;
+    max-width: 100vw;
+    margin: 0;
+    list-style: none;
+    z-index: $toast-z-index;
+    outline: none;
+
+    // Responsive adjustments
+    @media (max-width: 640px) {
+        padding: 16px;
+        width: 100%;
+    }
+}
+
+// Base Toast Root styles
+.ToastRoot {
+    background-color: $toast-bg-color;
+    border-radius: $toast-border-radius;
+    border-color: $toast-boarder-color;
+    box-shadow: $toast-shadow;
+    padding: 15px;
+    display: grid;
+    grid-template-areas: 'title action' 'description action';
+    grid-template-columns: auto max-content;
+    column-gap: 15px;
+    align-items: center;
+
+    // Border left styling based on toast type
+    border-left: 4px solid $toast-info-color;
+
+    // Toast types
+    &.success {
+        border-left-color: $toast-success-color;
+    }
+
+    &.error {
+        border-left-color: $toast-error-color;
+    }
+
+    &.warning {
+        border-left-color: $toast-warning-color;
+    }
+
+    &.info {
+        border-left-color: $toast-info-color;
+    }
+
+    // Hover effect
+    &:hover {
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+}
+
+// Toast Title
+.ToastTitle {
+    grid-area: title;
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 5px;
+    color: #1f2937; // Dark gray
+
+    // Title colors based on toast type
+    .ToastRoot.success & {
+        color: $toast-success-color;
+    }
+
+    .ToastRoot.error & {
+        color: $toast-error-color;
+    }
+
+    .ToastRoot.warning & {
+        color: $toast-warning-color;
+    }
+
+    .ToastRoot.info & {
+        color: $toast-info-color;
+    }
+}
+
+// Toast Description
+.ToastDescription {
+    grid-area: description;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.4;
+    color: #4b5563; // Medium gray
+}
+
+// Toast Action (Close button area)
+.ToastAction {
+    grid-area: action;
+}
+
+// Close button
+.ToastCloseButton {
+    border: none;
+    background: transparent;
+    color: #9ca3af; // Light gray
+    cursor: pointer;
+    height: 25px;
+    width: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+
+    &:hover {
+        background-color: #f3f4f6; // Very light gray
+        color: #4b5563; // Darker on hover
+    }
+
+    &:focus {
+        outline: 2px solid #e5e7eb;
+        outline-offset: 1px;
+    }
+}
+
+// Animation keyframes
+@keyframes slideIn {
+    from {
+        transform: translateX(calc(100% + 25px));
+    }
+
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes swipeOut {
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(calc(100% + 25px));
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+// Animation states
+.ToastRoot {
+    &[data-state='open'] {
+        animation: slideIn 150ms cubic-bezier(0.16, 1, 0.3, 1), fadeIn 150ms ease;
+    }
+
+    &[data-state='closed'] {
+        animation: swipeOut 100ms ease-out, fadeOut 100ms ease;
+    }
+
+    &[data-swipe='move'] {
+        transform: translateX(var(--radix-toast-swipe-move-x));
+    }
+
+    &[data-swipe='cancel'] {
+        transform: translateX(0);
+        transition: transform 200ms ease-out;
+    }
+
+    &[data-swipe='end'] {
+        animation: swipeOut 100ms ease-out;
+    }
+}
+
+// Toast with icon
+.ToastWithIcon {
+    grid-template-areas: 'icon title action' 'icon description action';
+    grid-template-columns: auto 1fr auto;
+    column-gap: 15px;
+
+    .ToastIcon {
+        grid-area: icon;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+    }
+}
+
+// Different viewport positions
+.ToastViewport {
+    &.top-right {
+        top: 0;
+        right: 0;
+        bottom: auto;
+        left: auto;
+    }
+
+    &.top-left {
+        top: 0;
+        left: 0;
+        bottom: auto;
+        right: auto;
+    }
+
+    &.bottom-left {
+        bottom: 0;
+        left: 0;
+        top: auto;
+        right: auto;
+    }
+
+    &.bottom-center {
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        top: auto;
+    }
+
+    &.top-center {
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: auto;
+    }
+}

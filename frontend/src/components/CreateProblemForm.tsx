@@ -4,10 +4,12 @@ import { useState } from "react";
 import { Toast } from "radix-ui"
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createProblem } from "../services/problemService";
+import './ToastStyles.scss';
 
 export function CreateProblemForm() {
     const queryClient = useQueryClient();
-    const [toastOpen, setToastOpen] = useState(false);
+    // const [toastOpen, setToastOpen] = useState(false);
+    const [toastOpen, setToastOpen] = useState(true);
     const [toastType, setToastType] = useState<'success' | 'error'>('success');
     const [toastMessage, setToastMessage] = useState("");
     const [formValues, setFormValues] = useState({
@@ -61,7 +63,7 @@ export function CreateProblemForm() {
             <Toast.Root
                 open={toastOpen}
                 onOpenChange={setToastOpen}
-                duration={5000}
+                duration={30000}
             // TODO: Stype success vs failure
             >
                 <Toast.Title>{toastType === 'success' ? 'Success' : 'Error'}</Toast.Title>
