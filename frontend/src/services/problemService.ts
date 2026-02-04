@@ -21,3 +21,24 @@ export async function fetchProblemById(id: string): Promise<Problem> {
 
     return response.json();
 }
+
+interface ProblemFormData {
+    Question: string;
+    Answer: string;
+}
+
+export async function createProblem(data: ProblemFormData): Promise<any> {
+    const response = await fetch('http://localhost:8080/problem', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+    }
+
+    return response.json();
+};
