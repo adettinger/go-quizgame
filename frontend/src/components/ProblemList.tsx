@@ -16,6 +16,7 @@ export function ProblemList() {
             queryClient.invalidateQueries({ queryKey: ['problems'] })
             // queryClient.invalidateQueries({queryKey: ['problem', problem.id]})
             // TODO: Re-trigger query
+            // refetch();
         },
         onError: (error) => {
             console.log('Failed to delete problem', error)
