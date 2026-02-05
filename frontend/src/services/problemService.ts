@@ -27,7 +27,7 @@ interface ProblemFormData {
     Answer: string;
 }
 
-export async function createProblem(data: ProblemFormData): Promise<any> {
+export async function createProblem(data: ProblemFormData): Promise<Problem> {
     const response = await fetch('http://localhost:8080/problem', {
         method: 'POST',
         headers: {

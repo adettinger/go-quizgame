@@ -1,11 +1,11 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, type JSX, type ReactNode } from "react";
 import * as RadixToast from '@radix-ui/react-toast';
 import './ToastStyles.scss';
 
 type ToastType = 'success' | 'error' | 'warning' | 'info';
 
 interface ToastContextType {
-    showToast: (type: ToastType, title: string, message: string) => void;
+    showToast: (type: ToastType, title: string, message: string | JSX.Element) => void;
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
@@ -14,9 +14,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     const [open, setOpen] = useState(false);
     const [type, setType] = useState<ToastType>('success');
     const [title, setTitle] = useState('');
-    const [message, setMessage] = useState('');
+    const [message, setMessage] = useState<string | JSX.Element>('');
 
-    const showToast = (toastType: ToastType, toastTitle: string, toastMessage: string) => {
+    const showToast = (toastType: ToastType, toastTitle: string, toastMessage: string | JSX.Element) => {
         setType(toastType);
         setTitle(toastTitle);
         setMessage(toastMessage);

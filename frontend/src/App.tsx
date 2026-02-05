@@ -8,29 +8,32 @@ import { Theme } from '@radix-ui/themes';
 import '@radix-ui/themes/styles.css';
 import { ViewProblemPage } from './pages/ViewProblem';
 import { CreateProblemPage } from './pages/CreateProblem';
+import { ToastProvider } from './components/Toast/ToastContext';
 
 function App() {
 
   return (
     <Router>
-      <div className='App'>
-        <Theme>
-          <NavBar />
-          <div className="container mt-4">
-            <div className='App-header'>
-              <h1>Quizgame</h1>
-            </div>
+      <ToastProvider>
+        <div className='App'>
+          <Theme>
+            <NavBar />
+            <div className="container mt-4">
+              <div className='App-header'>
+                <h1>Quizgame</h1>
+              </div>
 
-            <Routes>
-              <Route path="/" element={<Welcome />} />
-              <Route path="/*" element={<NotFound />} />
-              <Route path="/problems" element={<ProblemsPage />} />
-              <Route path="/problem/:id" element={<ViewProblemPage />} />
-              <Route path="/problem/new" element={<CreateProblemPage />} />
-            </Routes>
-          </div>
-        </Theme>
-      </div>
+              <Routes>
+                <Route path="/" element={<Welcome />} />
+                <Route path="/*" element={<NotFound />} />
+                <Route path="/problems" element={<ProblemsPage />} />
+                <Route path="/problem/:id" element={<ViewProblemPage />} />
+                <Route path="/problem/new" element={<CreateProblemPage />} />
+              </Routes>
+            </div>
+          </Theme>
+        </div>
+      </ToastProvider>
     </Router>
   )
 }

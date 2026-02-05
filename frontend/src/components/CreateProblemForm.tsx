@@ -5,6 +5,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createProblem } from "../services/problemService";
 import './Toast/ToastStyles.scss';
 import { useToast } from "./Toast/ToastContext";
+import { Link } from "react-router-dom";
+import type { Problem } from "../types/problem";
 
 export function CreateProblemForm() {
     const queryClient = useQueryClient();
@@ -17,10 +19,10 @@ export function CreateProblemForm() {
     const mutation = useMutation({
         mutationFn: createProblem,
 
-        onSuccess: () => {
+        onSuccess: (problem: Problem) => {
             queryClient.invalidateQueries({ queryKey: ['problems'] })
             setFormValues({ Question: "", Answer: "" })
-            showToast('success', "Success", "Created problem successfully");
+            showToast('success', "Success", <>Created problem <Link to={`/problem/${problem.Id}`}>{problem.Id}</Link> successfully</>);
         },
 
         onError: () => {
