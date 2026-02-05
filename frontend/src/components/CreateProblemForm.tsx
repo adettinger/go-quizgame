@@ -8,8 +8,7 @@ import './ToastStyles.scss';
 
 export function CreateProblemForm() {
     const queryClient = useQueryClient();
-    // const [toastOpen, setToastOpen] = useState(false);
-    const [toastOpen, setToastOpen] = useState(true);
+    const [toastOpen, setToastOpen] = useState(false);
     const [toastType, setToastType] = useState<'success' | 'error'>('success');
     const [toastMessage, setToastMessage] = useState("");
     const [formValues, setFormValues] = useState({
@@ -61,13 +60,14 @@ export function CreateProblemForm() {
     return (
         <Toast.Provider>
             <Toast.Root
+                className={`ToastRoot ${toastType}`}
                 open={toastOpen}
                 onOpenChange={setToastOpen}
-                duration={30000}
+                duration={3000}
             // TODO: Stype success vs failure
             >
-                <Toast.Title>{toastType === 'success' ? 'Success' : 'Error'}</Toast.Title>
-                <Toast.Description>{toastMessage}</Toast.Description>
+                <Toast.Title className="ToastTitle">{toastType === 'success' ? 'Success' : 'Error'}</Toast.Title>
+                <Toast.Description className="ToastDescription" >{toastMessage}</Toast.Description>
             </Toast.Root>
             <Toast.Viewport className="ToastViewport" />
             <Form.Root onSubmit={handleSubmit}>

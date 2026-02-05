@@ -1,15 +1,15 @@
 // ToastStyles.scss
 
 // Variables
-$toast-bg-color: #ffffff;
-$toast-boarder-color: #1f2937;
+$toast-bg-color: #605fa1;
+$toast-border-color: #1f2937;
 $toast-success-color: #10b981; // Green
 $toast-error-color: #ef4444; // Red
 $toast-warning-color: #f59e0b; // Amber
 $toast-info-color: #3b82f6; // Blue
 $toast-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 $toast-border-radius: 6px;
-$toast-z-index: 9999;
+$toast-z-index: 2147483647;
 
 // Toast Viewport - Container for all toasts
 .ToastViewport {
@@ -36,9 +36,9 @@ $toast-z-index: 9999;
 
 // Base Toast Root styles
 .ToastRoot {
-    background-color: $toast-bg-color;
+    // background-color: $toast-bg-color;
     border-radius: $toast-border-radius;
-    border-color: $toast-boarder-color;
+    border-color: $toast-border-color;
     box-shadow: $toast-shadow;
     padding: 15px;
     display: grid;
