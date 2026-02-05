@@ -1,7 +1,7 @@
 // ToastStyles.scss
 
 // Variables
-$toast-bg-color: #605fa1;
+$toast-bg-color: #ffffff;
 $toast-border-color: #1f2937;
 $toast-success-color: #10b981; // Green
 $toast-error-color: #ef4444; // Red
@@ -36,7 +36,7 @@ $toast-z-index: 2147483647;
 
 // Base Toast Root styles
 .ToastRoot {
-    // background-color: $toast-bg-color;
+    background-color: $toast-bg-color;
     border-radius: $toast-border-radius;
     border-color: $toast-border-color;
     box-shadow: $toast-shadow;

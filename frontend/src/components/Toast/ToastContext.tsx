@@ -45,7 +45,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                     </RadixToast.Action>
                 </RadixToast.Root>
 
-                <RadixToast.Viewport className="ToastViewport" />
+                <RadixToast.Viewport className="ToastViewport top-right" />
             </RadixToast.Provider>
         </ToastContext.Provider>
     );
