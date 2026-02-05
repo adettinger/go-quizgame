@@ -9,6 +9,7 @@ import '@radix-ui/themes/styles.css';
 import { ViewProblemPage } from './pages/ViewProblem';
 import { CreateProblemPage } from './pages/CreateProblem';
 import { ToastProvider } from './components/Toast/ToastContext';
+import { QuizPage } from './pages/QuizPage';
 
 function App() {
 
@@ -29,6 +30,7 @@ function App() {
                 <Route path="/problems" element={<ProblemsPage />} />
                 <Route path="/problem/:id" element={<ViewProblemPage />} />
                 <Route path="/problem/new" element={<CreateProblemPage />} />
+                <Route path="/quiz" element={<QuizPage />} />
               </Routes>
             </div>
           </Theme>

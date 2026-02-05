@@ -32,6 +32,14 @@ const NavBar: React.FC = () => {
                                 Create Problem
                             </NavLink>
                         </li>
+                        <li className="nav-item">
+                            <NavLink
+                                className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}
+                                to="/quiz"
+                            >
+                                Take Quiz
+                            </NavLink>
+                        </li>
                     </ul>
                 </div>
             </div>
