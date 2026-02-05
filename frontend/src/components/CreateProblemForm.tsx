@@ -19,14 +19,11 @@ export function CreateProblemForm() {
 
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['problems'] })
-            // Display success msg
-            // Reset inputs
             setFormValues({ Question: "", Answer: "" })
             showToast('success', "Success", "Created problem successfully");
         },
 
         onError: () => {
-            // Display error
             console.log("Request to create new problem failed")
             showToast('error', "Error", "Failed to create problem");
         },
