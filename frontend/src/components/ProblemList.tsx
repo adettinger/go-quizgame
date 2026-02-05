@@ -4,19 +4,20 @@ import { Flex, IconButton, Table } from "@radix-ui/themes"
 import { TrashIcon } from '@radix-ui/react-icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { deleteProblemById } from '../services/problemService';
+import { useToast } from './Toast/ToastContext';
 
 export function ProblemList() {
     const queryClient = useQueryClient();
-    // TODO: Toast
+    const { showToast } = useToast();
     const { data, isLoading, isError, error } = useProblems();
 
     const deleteMutation = useMutation({
         mutationFn: deleteProblemById,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['problems'] })
-            // queryClient.invalidateQueries({queryKey: ['problem', problem.id]})
-            // TODO: Re-trigger query
-            // refetch();
+        onSuccess: (id: string) => {
+            queryClient.invalidateQueries({ queryKey: ['problems'] });
+            queryClient.invalidateQueries({ queryKey: ['problem', id] });
+            showToast('success', "Success", `Deleted problem ${id}`);
+            console.log(`Deleted problem ${id}`);
         },
         onError: (error) => {
             console.log('Failed to delete problem', error)

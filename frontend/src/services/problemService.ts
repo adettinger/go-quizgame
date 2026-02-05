@@ -43,7 +43,7 @@ export async function createProblem(data: ProblemFormData): Promise<any> {
     return response.json();
 };
 
-export async function deleteProblemById(id: string): Promise<void> {
+export async function deleteProblemById(id: string): Promise<string> {
     const response = await fetch(`${API_URL}/problem/${id}`, {
         method: 'DELETE',
     });
@@ -52,5 +52,5 @@ export async function deleteProblemById(id: string): Promise<void> {
         throw new Error(`Error deleting problems: ${response.status}`);
     }
 
-    return response.json();
+    return id;
 }
