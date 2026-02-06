@@ -108,6 +108,21 @@ func (ds *DataStore) SaveProblems() error {
 	return nil
 }
 
+func (ds DataStore) GetQuestions() []models.Question {
+	ds.mu.RLock()
+	defer ds.mu.RUnlock()
+
+	// Return a copy to prevent external modification TODO: Needed?
+	questions := make([]models.Question, len(ds.problems))
+	for i, p := range ds.problems {
+		questions[i] = models.Question{
+			Id:       p.Id,
+			Question: p.Question,
+		}
+	}
+	return questions
+}
+
 func (ds *DataStore) getNewId() uuid.UUID {
 	for {
 		uuid := uuid.New()

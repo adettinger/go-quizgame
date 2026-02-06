@@ -89,6 +89,10 @@ func (wc Controller) SaveProblems(c *gin.Context) {
 	c.JSON(http.StatusAccepted, gin.H{"message": "Saved problems"})
 }
 
+func (wc Controller) GetQuestions(c *gin.Context) {
+	c.JSON(http.StatusOK, wc.ds.GetQuestions())
+}
+
 func (wc Controller) SubmitQuiz(c *gin.Context) {
 	var request = []models.Problem{}
 	if err := c.BindJSON(&request); err != nil {
