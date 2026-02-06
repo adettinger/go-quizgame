@@ -18,7 +18,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	controller := webserver.NewProblemController(ds)
+	problemController := webserver.NewProblemController(ds)
+	quizController := webserver.NewQuizController(ds)
 	router := gin.Default()
 
 	router.Use(cors.New(cors.Config{
@@ -31,18 +32,18 @@ func main() {
 	}))
 
 	// Server health
-	router.GET("/ping", controller.Ping)
-	router.GET("/hello", controller.HelloWorld)
+	router.GET("/ping", problemController.Ping)
+	router.GET("/hello", problemController.HelloWorld)
 
 	// Problem related
-	router.GET("/problem", controller.ListProblems)
-	router.GET("/problem/:id", controller.GetProblemById)
-	router.DELETE("/problem/:id", controller.DeleteProblem)
-	router.POST("/problem", controller.AddProblem)
-	router.POST("/problem/save", controller.SaveProblems)
+	router.GET("/problem", problemController.ListProblems)
+	router.GET("/problem/:id", problemController.GetProblemById)
+	router.DELETE("/problem/:id", problemController.DeleteProblem)
+	router.POST("/problem", problemController.AddProblem)
+	router.POST("/problem/save", problemController.SaveProblems)
 
-	router.GET("/quiz/questions", controller.GetQuestions)
-	router.POST("/quiz/submit", controller.SubmitQuiz)
+	router.GET("/quiz/questions", quizController.GetQuestions)
+	router.POST("/quiz/submit", quizController.SubmitQuiz)
 
 	router.Run("localhost:8080")
 }

@@ -58,14 +58,14 @@ func TestGetProblemById(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			controller := webserver.NewProblemController(testDataStore)
+			problemController := webserver.NewProblemController(testDataStore)
 
 			// Create a test HTTP response recorder and context
 			w := httptest.NewRecorder()
 			c, r := gin.CreateTestContext(w)
 
 			// Set up the route
-			r.GET("/problem/:id", controller.GetProblemById)
+			r.GET("/problem/:id", problemController.GetProblemById)
 
 			// Create the request
 			req, _ := http.NewRequest("GET", "/problem/"+tt.urlParam, nil)
@@ -73,7 +73,7 @@ func TestGetProblemById(t *testing.T) {
 			c.Params = []gin.Param{{Key: "id", Value: tt.urlParam}}
 
 			// Call the handler
-			controller.GetProblemById(c)
+			problemController.GetProblemById(c)
 
 			// Assert status code
 			assert.Equal(t, tt.expectedStatus, w.Code)
@@ -102,20 +102,20 @@ func TestGetProblemById(t *testing.T) {
 func TestListProblems(t *testing.T) {
 	testDataStore, _ := webserver.NewDataStoreFromData(problemSet)
 	gin.SetMode(gin.TestMode)
-	controller := webserver.NewProblemController(testDataStore)
+	problemController := webserver.NewProblemController(testDataStore)
 
 	w := httptest.NewRecorder()
 	c, r := gin.CreateTestContext(w)
 
 	// Set up the route
-	r.GET("/problem/", controller.ListProblems)
+	r.GET("/problem/", problemController.ListProblems)
 
 	// Create the request
 	req, _ := http.NewRequest("GET", "/problem/", nil)
 	c.Request = req
 
 	// Call the handler
-	controller.ListProblems(c)
+	problemController.ListProblems(c)
 
 	// Assert status code
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -163,13 +163,13 @@ func TestDeleteProblem(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			testDataStore, _ := webserver.NewDataStoreFromData(problemSet)
-			controller := webserver.NewProblemController(testDataStore)
+			problemController := webserver.NewProblemController(testDataStore)
 
 			w := httptest.NewRecorder()
 			c, r := gin.CreateTestContext(w)
 
 			// Set up the route
-			r.DELETE("/problem/", controller.ListProblems)
+			r.DELETE("/problem/", problemController.ListProblems)
 
 			// Create the request
 			req, _ := http.NewRequest("DELETE", "/problem/"+tt.urlParam, nil)
@@ -177,7 +177,7 @@ func TestDeleteProblem(t *testing.T) {
 			c.Params = []gin.Param{{Key: "id", Value: tt.urlParam}}
 
 			// Call the handler
-			controller.DeleteProblem(c)
+			problemController.DeleteProblem(c)
 
 			// Assert status code
 			if !tt.validUUID {
@@ -234,13 +234,13 @@ func TestAddProblem(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			testDataStore, _ := webserver.NewDataStoreFromData(problemSet)
-			controller := webserver.NewProblemController(testDataStore)
+			problemController := webserver.NewProblemController(testDataStore)
 
 			w := httptest.NewRecorder()
 			router := gin.New()
 
 			// Set up the route
-			router.POST("/problem/", controller.AddProblem)
+			router.POST("/problem/", problemController.AddProblem)
 
 			// Create the request
 			jsonBody, _ := json.Marshal(tt.requestBody)

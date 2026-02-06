@@ -108,7 +108,7 @@ func (ds *DataStore) SaveProblems() error {
 	return nil
 }
 
-func (ds DataStore) GetQuestions() []models.Question {
+func (ds *DataStore) GetQuestions() []models.Question {
 	ds.mu.RLock()
 	defer ds.mu.RUnlock()
 
