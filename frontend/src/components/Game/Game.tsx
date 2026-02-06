@@ -1,4 +1,4 @@
-import { Button, Flex } from "@radix-ui/themes";
+import { Button, Flex, Text } from "@radix-ui/themes";
 import * as Form from "@radix-ui/react-form";
 import { useEffect, useState } from "react";
 import { useQuestions } from "../../hooks/useQuestions";
@@ -7,36 +7,80 @@ import { submitQuiz } from "../../services/problemService";
 import type { SubmitQuizResponse } from "../../types/responses";
 import { useToast } from "../Toast/ToastContext";
 
+interface quizItems {
+    Id: string;
+    Question: string;
+    Guess: string;
+    Answer: string;
+    Correct: boolean | undefined;
+}
 
-// Note: keeping a map in state is not memory effecient since the map is copied on every update
 export function Game() {
     const { data, isLoading, isError, error } = useQuestions();
     const { showToast } = useToast();
-    const [answersMap, setAnswersMap] = useState<Map<string, string>>();
+    const [score, setScore] = useState(-1);
+    const [quizItems, setQuizItems] = useState<quizItems[]>([]);
+    // const [answersMap, setAnswersMap] = useState<Map<string, string>>();
+    // const [quizResponse, setQuizResponse] = useState<SubmitQuizResponse>();
 
     useEffect(() => {
         if (data) {
-            const initialAnswers = data.reduce((map, problem) => {
-                map.set(problem.Id, '')
-                return map;
-            }, new Map<string, string>());
-            setAnswersMap(initialAnswers);
+            let initialQuizItems: quizItems[] = [];
+            data.forEach(question => {
+                initialQuizItems.push({
+                    Id: question.Id,
+                    Question: question.Question,
+                    Guess: '',
+                    Answer: '',
+                    Correct: undefined,
+                })
+            })
+            setQuizItems(initialQuizItems);
         }
     }, [data]);
 
-    const updateAnswer = (id: string, answer: string) => {
-        const updatedAnswers = new Map(answersMap);
-        updatedAnswers.set(id, answer);
-        setAnswersMap(updatedAnswers);
+    const updateGuess = (id: string, answer: string) => {
+        setQuizItems((quizItems) =>
+            quizItems.map(item =>
+                item.Id === id
+                    ? { ...item, Guess: answer }
+                    : item
+            )
+        );
+    };
+
+    const updateQuizItemsFromResponse = (response: SubmitQuizResponse) => {
+        setScore(response.Score);
+        const updatedItems = quizItems.map(item => {
+            // Find matching item from response
+            const matchingResponse = response.Answers.find((element) =>
+                element.Id === item.Id  // Use === for comparison and RETURN the result
+            );
+
+            // Update Answer and correct
+            if (matchingResponse) {
+                return {
+                    ...item,
+                    Answer: matchingResponse.Answer,
+                    Correct: matchingResponse.Correct
+                };
+            } else {
+                console.log("Failed to find matching response for id:", item.Id);
+                return item;
+            }
+        });
+        setQuizItems(updatedItems);
+
     };
 
     const mutation = useMutation({
         mutationFn: submitQuiz,
 
-        onSuccess: (reponse: SubmitQuizResponse) => {
+        onSuccess: (response: SubmitQuizResponse) => {
             // Set scores and answers
-            // Show toast
             showToast('success', "Success", "Quiz submitted");
+            // Update quizItems and score
+            updateQuizItemsFromResponse(response);
         },
 
         onError: () => {
@@ -47,10 +91,10 @@ export function Game() {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-        console.log('submitting quiz with answers', answersMap);
+        console.log('submitting quiz with answers', quizItems);
 
         mutation.mutate(
-            answersMap ? Array.from(answersMap, ([id, answer]) => ({ Id: id, Answer: answer })) : []
+            quizItems ? Array.from(quizItems, (quizItem) => ({ Id: quizItem.Id, Answer: quizItem.Guess })) : []
         );
     };
 
@@ -67,28 +111,41 @@ export function Game() {
     }
 
     return (
-        <Form.Root onSubmit={handleSubmit}>
-            <Flex direction={"column"} gap="3" width={"50%"} justify="center">
+        <>
+            {score >= 0 &&
+                <Text>Score: {score}</Text>
+            }
+            <Form.Root onSubmit={handleSubmit}>
+                <Flex direction={"column"} gap="3" width={"50%"} justify="center">
 
-                {data?.map((problem) => (
-                    <Form.Field name={`Question-${problem.Id}`}>
-                        <Flex direction="column" gap="3">
-                            <Form.Label>{problem.Question}</Form.Label>
-                            <Form.Control asChild>
-                                <input
-                                    type="text"
-                                    required
-                                    value={answersMap?.get(problem.Id) || ''}
-                                    onChange={(event) => updateAnswer(problem.Id, event.target.value)}
-                                />
-                            </Form.Control>
-                        </Flex>
-                    </Form.Field>
-                ))}
-                <Form.Submit asChild>
-                    <Button>Submit Quiz</Button>
-                </Form.Submit>
-            </Flex>
-        </Form.Root>
+                    {quizItems?.map((problem) => (
+                        <Form.Field name={`Question-${problem.Id}`}>
+                            <Flex direction="column" gap="3">
+                                <Form.Label>{problem.Question}</Form.Label>
+                                <Form.Control asChild>
+                                    <input
+                                        type="text"
+                                        // TODO: Find better style when input is disabled
+                                        style={{
+                                            color: !!problem.Correct ? (problem.Correct ? "green" : "red") : ""
+                                        }}
+                                        required
+                                        value={problem.Guess}
+                                        onChange={(event) => updateGuess(problem.Id, event.target.value)}
+                                        disabled={score >= 0}
+                                    />
+                                </Form.Control>
+                                {problem.Correct === false &&
+                                    <Text color="red">{problem.Answer}</Text>
+                                }
+                            </Flex>
+                        </Form.Field>
+                    ))}
+                    <Form.Submit asChild>
+                        <Button disabled={score >= 0}>Submit Quiz</Button>
+                    </Form.Submit>
+                </Flex>
+            </Form.Root>
+        </>
     );
 }
