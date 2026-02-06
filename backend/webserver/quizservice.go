@@ -4,17 +4,10 @@ import (
 	"fmt"
 
 	"github.com/adettinger/go-quizgame/models"
-	"github.com/google/uuid"
 )
 
 type QuizService struct {
 	ds *DataStore
-}
-
-type ProblemEvaluation struct {
-	Id      uuid.UUID
-	Answer  string
-	Correct bool
 }
 
 func NewQuizService(ds *DataStore) *QuizService {
@@ -23,18 +16,26 @@ func NewQuizService(ds *DataStore) *QuizService {
 	}
 }
 
-func (qs *QuizService) EvaluateQuiz(submission []models.Problem) ([]ProblemEvaluation, error) {
-	response := make([]ProblemEvaluation, len(submission))
+func (qs *QuizService) EvaluateQuiz(submission []models.Problem) (models.EvaluateQuizResponse, error) {
+	questionResponses := make([]models.QuestionResponse, len(submission))
+	score := 0
 	for i, s := range submission {
 		matchingProblem, err := qs.ds.GetProblemById(s.Id)
 		if err != nil {
-			return []ProblemEvaluation{}, fmt.Errorf("Cannot find problem with Id %v", s.Id)
+			return models.EvaluateQuizResponse{}, fmt.Errorf("Cannot find problem with Id %v", s.Id)
 		}
-		response[i] = ProblemEvaluation{
+		correct := s.Answer == matchingProblem.Answer
+		questionResponses[i] = models.QuestionResponse{
 			Id:      s.Id,
 			Answer:  matchingProblem.Answer,
-			Correct: s.Answer == matchingProblem.Answer,
+			Correct: correct,
+		}
+		if correct {
+			score++
 		}
 	}
-	return response, nil
+	return models.EvaluateQuizResponse{
+		Score:   score,
+		Answers: questionResponses,
+	}, nil
 }
