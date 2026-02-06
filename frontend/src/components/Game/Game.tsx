@@ -1,32 +1,57 @@
 import { Button, Flex } from "@radix-ui/themes";
-import { useProblems } from "../../hooks/useProblems";
 import * as Form from "@radix-ui/react-form";
 import { useEffect, useState } from "react";
+import { useQuestions } from "../../hooks/useQuestions";
+import { useMutation } from "@tanstack/react-query";
+import { submitQuiz } from "../../services/problemService";
+import type { SubmitQuizResponse } from "../../types/responses";
+import { useToast } from "../Toast/ToastContext";
 
+
+// Note: keeping a map in state is not memory effecient since the map is copied on every update
 export function Game() {
-    const { data, isLoading, isError, error } = useProblems();
-    const [answersMap, setAnswersMap] = useState<Record<string, string>>({});
+    const { data, isLoading, isError, error } = useQuestions();
+    const { showToast } = useToast();
+    const [answersMap, setAnswersMap] = useState<Map<string, string>>();
 
     useEffect(() => {
         if (data) {
             const initialAnswers = data.reduce((map, problem) => {
-                map[problem.Id] = '';
+                map.set(problem.Id, '')
                 return map;
-            }, {} as Record<string, string>);
+            }, new Map<string, string>());
             setAnswersMap(initialAnswers);
         }
     }, [data]);
 
     const updateAnswer = (id: string, answer: string) => {
-        setAnswersMap(prev => ({
-            ...prev,
-            [id]: answer
-        }));
+        const updatedAnswers = new Map(answersMap);
+        updatedAnswers.set(id, answer);
+        setAnswersMap(updatedAnswers);
     };
+
+    const mutation = useMutation({
+        mutationFn: submitQuiz,
+
+        onSuccess: (reponse: SubmitQuizResponse) => {
+            // Set scores and answers
+            // Show toast
+            showToast('success', "Success", "Quiz submitted");
+        },
+
+        onError: () => {
+            console.log("Request to submit quiz failed")
+            showToast('error', "Error", "Failed to submit quiz");
+        },
+    })
 
     const handleSubmit = async (event) => {
         event.preventDefault();
         console.log('submitting quiz with answers', answersMap);
+
+        mutation.mutate(
+            answersMap ? Array.from(answersMap, ([id, answer]) => ({ Id: id, Answer: answer })) : []
+        );
     };
 
     if (isLoading) {
@@ -53,7 +78,7 @@ export function Game() {
                                 <input
                                     type="text"
                                     required
-                                    value={answersMap[problem.Id] || ''}
+                                    value={answersMap?.get(problem.Id) || ''}
                                     onChange={(event) => updateAnswer(problem.Id, event.target.value)}
                                 />
                             </Form.Control>

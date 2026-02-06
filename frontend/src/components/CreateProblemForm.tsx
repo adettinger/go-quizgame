@@ -43,7 +43,6 @@ export function CreateProblemForm() {
             Answer: formValues.Answer,
         });
 
-        // TODO: Actually send request
         mutation.mutate({
             Question: formValues.Question.trim(),
             Answer: formValues.Answer.trim(),

@@ -1,4 +1,7 @@
 import { type Problem } from '../types/problem';
+import type { Question } from '../types/question';
+import type { QuestionSubmission } from '../types/requests';
+import type { SubmitQuizResponse } from '../types/responses';
 
 const API_URL = 'http://localhost:8080';
 
@@ -7,6 +10,16 @@ export async function fetchProblems(): Promise<Problem[]> {
 
     if (!response.ok) {
         throw new Error(`Error fetching problems: ${response.status}`);
+    }
+
+    return response.json();
+}
+
+export async function fetchQuestions(): Promise<Question[]> {
+    const response = await fetch(`${API_URL}/quiz/questions`);
+
+    if (!response.ok) {
+        throw new Error(`Error fetching questions: ${response.status}`);
     }
 
     return response.json();
@@ -22,13 +35,14 @@ export async function fetchProblemById(id: string): Promise<Problem> {
     return response.json();
 }
 
+// TODO: Move interfaces
 interface ProblemFormData {
     Question: string;
     Answer: string;
 }
 
 export async function createProblem(data: ProblemFormData): Promise<Problem> {
-    const response = await fetch('http://localhost:8080/problem', {
+    const response = await fetch(`${API_URL}/problem`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -42,6 +56,21 @@ export async function createProblem(data: ProblemFormData): Promise<Problem> {
 
     return response.json();
 };
+
+export async function submitQuiz(data: QuestionSubmission[]): Promise<SubmitQuizResponse> {
+    const response = await fetch(`${API_URL}/quiz/submit`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+        throw new Error(`Error submitting quiz: ${response.status}`);
+    }
+
+    return response.json();
+}
 
 export async function deleteProblemById(id: string): Promise<string> {
     const response = await fetch(`${API_URL}/problem/${id}`, {
