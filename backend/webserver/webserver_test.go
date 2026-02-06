@@ -8,6 +8,7 @@ import (
 	"slices"
 	"testing"
 
+	"github.com/adettinger/go-quizgame/controllers"
 	"github.com/adettinger/go-quizgame/models"
 	"github.com/adettinger/go-quizgame/webserver"
 	"github.com/gin-gonic/gin"
@@ -58,7 +59,7 @@ func TestGetProblemById(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			problemController := webserver.NewProblemController(testDataStore)
+			problemController := controllers.NewProblemController(testDataStore)
 
 			// Create a test HTTP response recorder and context
 			w := httptest.NewRecorder()
@@ -102,7 +103,7 @@ func TestGetProblemById(t *testing.T) {
 func TestListProblems(t *testing.T) {
 	testDataStore, _ := webserver.NewDataStoreFromData(problemSet)
 	gin.SetMode(gin.TestMode)
-	problemController := webserver.NewProblemController(testDataStore)
+	problemController := controllers.NewProblemController(testDataStore)
 
 	w := httptest.NewRecorder()
 	c, r := gin.CreateTestContext(w)
@@ -163,7 +164,7 @@ func TestDeleteProblem(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			testDataStore, _ := webserver.NewDataStoreFromData(problemSet)
-			problemController := webserver.NewProblemController(testDataStore)
+			problemController := controllers.NewProblemController(testDataStore)
 
 			w := httptest.NewRecorder()
 			c, r := gin.CreateTestContext(w)
@@ -234,7 +235,7 @@ func TestAddProblem(t *testing.T) {
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
 			testDataStore, _ := webserver.NewDataStoreFromData(problemSet)
-			problemController := webserver.NewProblemController(testDataStore)
+			problemController := controllers.NewProblemController(testDataStore)
 
 			w := httptest.NewRecorder()
 			router := gin.New()

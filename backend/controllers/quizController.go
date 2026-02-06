@@ -1,22 +1,23 @@
-package webserver
+package controllers
 
 import (
 	"net/http"
 
 	"github.com/adettinger/go-quizgame/models"
+	"github.com/adettinger/go-quizgame/webserver"
 	"github.com/gin-gonic/gin"
 )
 
 type QuizController struct {
-	ds *DataStore
-	qs *quizService
+	ds *webserver.DataStore
+	qs *webserver.QuizService
 }
 
 // Note: Instantiates a quizService
-func NewQuizController(ds *DataStore) *QuizController {
+func NewQuizController(ds *webserver.DataStore) *QuizController {
 	return &QuizController{
 		ds: ds,
-		qs: &quizService{ds: ds},
+		qs: webserver.NewQuizService(ds),
 	}
 }
 
@@ -31,7 +32,7 @@ func (qc QuizController) SubmitQuiz(c *gin.Context) {
 		return
 	}
 
-	response, err := qc.qs.evaluateQuiz(request)
+	response, err := qc.qs.EvaluateQuiz(request)
 	if err != nil {
 		// Warning: Sending service error directly to frontend
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})

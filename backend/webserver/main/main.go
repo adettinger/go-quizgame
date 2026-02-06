@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/adettinger/go-quizgame/controllers"
 	"github.com/adettinger/go-quizgame/webserver"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -18,8 +19,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	problemController := webserver.NewProblemController(ds)
-	quizController := webserver.NewQuizController(ds)
+	problemController := controllers.NewProblemController(ds)
+	quizController := controllers.NewQuizController(ds)
 	router := gin.Default()
 
 	router.Use(cors.New(cors.Config{

@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type quizService struct {
+type QuizService struct {
 	ds *DataStore
 }
 
@@ -17,7 +17,13 @@ type ProblemEvaluation struct {
 	Correct bool
 }
 
-func (qs quizService) evaluateQuiz(submission []models.Problem) ([]ProblemEvaluation, error) {
+func NewQuizService(ds *DataStore) *QuizService {
+	return &QuizService{
+		ds: ds,
+	}
+}
+
+func (qs *QuizService) EvaluateQuiz(submission []models.Problem) ([]ProblemEvaluation, error) {
 	response := make([]ProblemEvaluation, len(submission))
 	for i, s := range submission {
 		matchingProblem, err := qs.ds.GetProblemById(s.Id)

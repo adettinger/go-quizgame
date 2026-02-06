@@ -1,4 +1,4 @@
-package webserver
+package controllers
 
 import (
 	"errors"
@@ -7,15 +7,16 @@ import (
 	"strconv"
 
 	"github.com/adettinger/go-quizgame/models"
+	"github.com/adettinger/go-quizgame/webserver"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
 type ProblemController struct {
-	ds *DataStore
+	ds *webserver.DataStore
 }
 
-func NewProblemController(ds *DataStore) *ProblemController {
+func NewProblemController(ds *webserver.DataStore) *ProblemController {
 	return &ProblemController{
 		ds: ds,
 	}
