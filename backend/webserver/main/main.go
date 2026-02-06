@@ -40,6 +40,7 @@ func main() {
 	router.DELETE("/problem/:id", controller.DeleteProblem)
 	router.POST("/problem", controller.AddProblem)
 	router.POST("/problem/save", controller.SaveProblems)
+	router.POST("/quiz/submit", controller.SubmitQuiz)
 
 	router.Run("localhost:8080")
 }

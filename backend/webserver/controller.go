@@ -13,10 +13,14 @@ import (
 
 type Controller struct {
 	ds *DataStore
+	qs *quizService
 }
 
 func NewProblemController(ds *DataStore) *Controller {
-	return &Controller{ds: ds}
+	return &Controller{
+		ds: ds,
+		qs: &quizService{ds: ds},
+	}
 }
 
 func (wc Controller) Ping(c *gin.Context) {
@@ -83,6 +87,23 @@ func (wc Controller) SaveProblems(c *gin.Context) {
 	}
 	// TODO: Is this correct http code?
 	c.JSON(http.StatusAccepted, gin.H{"message": "Saved problems"})
+}
+
+func (wc Controller) SubmitQuiz(c *gin.Context) {
+	var request = []models.Problem{}
+	if err := c.BindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request"})
+		return
+	}
+
+	// Warning: Sending service error directly to frontend
+	fmt.Printf("request: %v\n", request)
+	response, err := wc.qs.evaluateQuiz(request)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+	}
+	fmt.Printf("Eval response: %v\n", response)
+	c.JSON(http.StatusOK, response)
 }
 
 func parseIndex(c *gin.Context) (int, error) {
