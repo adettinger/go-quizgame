@@ -17,6 +17,11 @@ type StartQuizResponse struct {
 	Questions []Question
 }
 
+type EvaluateQuizRequest struct {
+	SessionID uuid.UUID
+	Questions []Problem
+}
+
 type EvaluateQuizResponse struct {
 	Score   int
 	Answers []QuestionResponse

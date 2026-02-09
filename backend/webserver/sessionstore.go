@@ -9,40 +9,39 @@ import (
 )
 
 type SessionStore struct {
-	Sessions []Session
+	Sessions map[uuid.UUID]SessionData
 	mu       sync.RWMutex
 }
 
-type Session struct {
-	Id      uuid.UUID
+type SessionData struct {
 	Timeout time.Time
 }
 
 func NewSessionStore() *SessionStore {
 	return &SessionStore{
-		Sessions: make([]Session, 0),
+		Sessions: make(map[uuid.UUID]SessionData, 0),
 		mu:       sync.RWMutex{},
 	}
 }
 
-func (ss *SessionStore) CreateSession(duration time.Duration) Session {
-	session := Session{ss.getNewId(), time.Now().Add(duration)}
-	ss.mu.RLock()
-	defer ss.mu.RUnlock()
-	ss.Sessions = append(ss.Sessions, session)
-	return session
+func (ss *SessionStore) CreateSession(duration time.Duration) (uuid.UUID, SessionData) {
+	sessionID := ss.getNewId()
+	sessionData := SessionData{time.Now().Add(duration)}
+	ss.mu.Lock()
+	defer ss.mu.Unlock()
+	ss.Sessions[sessionID] = sessionData
+	return sessionID, sessionData
 }
 
-func (ss *SessionStore) GetBySessionId(id uuid.UUID) (Session, error) {
+func (ss *SessionStore) GetBySessionId(id uuid.UUID) (SessionData, error) {
 	ss.mu.RLock()
 	defer ss.mu.RUnlock()
 
-	for _, s := range ss.Sessions {
-		if s.Id == id {
-			return s, nil
-		}
+	s, ok := ss.Sessions[id]
+	if !ok {
+		return SessionData{}, errors.New("Session not found")
 	}
-	return Session{}, errors.New("Problem not found")
+	return s, nil
 }
 
 func (ss *SessionStore) getNewId() uuid.UUID {
@@ -57,4 +56,18 @@ func (ss *SessionStore) getNewId() uuid.UUID {
 func (ss *SessionStore) sessionExists(uuid uuid.UUID) bool {
 	_, err := ss.GetBySessionId(uuid)
 	return err == nil
+}
+
+func (ss *SessionStore) IsSessionActive(id uuid.UUID, time time.Time) (bool, error) {
+	session, err := ss.GetBySessionId(id)
+	if err != nil {
+		return false, errors.New("Session not found")
+	}
+	return session.Timeout.After(time), nil
+}
+
+func (ss *SessionStore) DeleteSession(id uuid.UUID) {
+	ss.mu.Lock()
+	defer ss.mu.Unlock()
+	delete(ss.Sessions, id)
 }
