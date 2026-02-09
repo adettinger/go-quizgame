@@ -7,6 +7,7 @@ import type { SubmitQuizResponse } from "../../types/responses";
 import { useToast } from "../Toast/ToastContext";
 import type { Question } from "../../types/question";
 import { useStartQuiz } from "../../hooks/useStartQuiz";
+import { CountdownTimer } from "./timer";
 
 interface quizItems {
     Id: string;
@@ -20,6 +21,7 @@ export function Game() {
     const { data, isLoading, isError, error } = useStartQuiz();
     const { showToast } = useToast();
     const [sessionID, setSessionID] = useState('');
+    const [timeout, setTimeout] = useState<Date>();
     const [score, setScore] = useState(-1);
     const [quizItems, setQuizItems] = useState<quizItems[]>([]);
     // const [answersMap, setAnswersMap] = useState<Map<string, string>>();
@@ -28,6 +30,7 @@ export function Game() {
     useEffect(() => {
         if (data) {
             setSessionID(data?.SessionId);
+            setTimeout(data?.Timeout);
             let initialQuizItems: quizItems[] = [];
             data.Questions.forEach((question: Question) => {
                 initialQuizItems.push({
@@ -101,6 +104,14 @@ export function Game() {
         );
     };
 
+    const handleExpire = async () => {
+        console.log("Time's up!");
+
+        mutation.mutate(
+            quizItems ? Array.from(quizItems, (quizItem) => ({ Id: quizItem.Id, Answer: quizItem.Guess })) : []
+        );
+    };
+
     if (isLoading) {
         return <div className="text-center p-4">Loading problems...</div>;
     }
@@ -116,9 +127,16 @@ export function Game() {
     return (
         <>
             {sessionID !== '' &&
-                <Text>Session ID: {sessionID}</Text>
+                <>
+                    <Text>Session ID: {sessionID}</Text>
+                    <CountdownTimer
+                        deadline={timeout !== undefined ? timeout : ''}
+                        onExpire={handleExpire}
+                        warningThreshold={30}
+                        criticalThreshold={10}
+                    />
+                </>
             }
-            {/* TODO: Add timeout */}
             {score >= 0 &&
                 <Text>Score: {score}</Text>
             }

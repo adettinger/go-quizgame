@@ -13,6 +13,6 @@ export interface QuestionResponse {
 
 export interface StartQuizResponse {
     SessionId: string;
-    Timeout: EpochTimeStamp;
+    Timeout: Date;
     Questions: Question[];
 }
