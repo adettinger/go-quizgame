@@ -44,6 +44,7 @@ func main() {
 	router.POST("/problem/save", problemController.SaveProblems)
 
 	router.GET("/quiz/questions", quizController.GetQuestions)
+	router.GET("/quiz/start", quizController.StartQuiz)
 	router.POST("/quiz/submit", quizController.SubmitQuiz)
 
 	router.Run("localhost:8080")

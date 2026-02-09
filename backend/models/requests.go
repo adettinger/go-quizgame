@@ -1,10 +1,20 @@
 package models
 
-import "github.com/google/uuid"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type CreateProblemRequest struct {
 	Question string
 	Answer   string
+}
+
+type StartQuizResponse struct {
+	SessionId uuid.UUID
+	Timeout   time.Time
+	Questions []Question
 }
 
 type EvaluateQuizResponse struct {
