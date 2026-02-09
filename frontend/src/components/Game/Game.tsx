@@ -1,11 +1,12 @@
 import { Button, Flex, Text } from "@radix-ui/themes";
 import * as Form from "@radix-ui/react-form";
 import { useEffect, useState } from "react";
-import { useQuestions } from "../../hooks/useQuestions";
 import { useMutation } from "@tanstack/react-query";
 import { submitQuiz } from "../../services/problemService";
 import type { SubmitQuizResponse } from "../../types/responses";
 import { useToast } from "../Toast/ToastContext";
+import type { Question } from "../../types/question";
+import { useStartQuiz } from "../../hooks/useStartQuiz";
 
 interface quizItems {
     Id: string;
@@ -16,8 +17,9 @@ interface quizItems {
 }
 
 export function Game() {
-    const { data, isLoading, isError, error } = useQuestions();
+    const { data, isLoading, isError, error } = useStartQuiz();
     const { showToast } = useToast();
+    const [sessionID, setSessionID] = useState('');
     const [score, setScore] = useState(-1);
     const [quizItems, setQuizItems] = useState<quizItems[]>([]);
     // const [answersMap, setAnswersMap] = useState<Map<string, string>>();
@@ -25,8 +27,9 @@ export function Game() {
 
     useEffect(() => {
         if (data) {
+            setSessionID(data?.SessionId);
             let initialQuizItems: quizItems[] = [];
-            data.forEach(question => {
+            data.Questions.forEach((question: Question) => {
                 initialQuizItems.push({
                     Id: question.Id,
                     Question: question.Question,
@@ -112,6 +115,10 @@ export function Game() {
 
     return (
         <>
+            {sessionID !== '' &&
+                <Text>Session ID: {sessionID}</Text>
+            }
+            {/* TODO: Add timeout */}
             {score >= 0 &&
                 <Text>Score: {score}</Text>
             }

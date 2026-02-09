@@ -1,7 +1,7 @@
 import { type Problem } from '../types/problem';
 import type { Question } from '../types/question';
 import type { QuestionSubmission } from '../types/requests';
-import type { SubmitQuizResponse } from '../types/responses';
+import type { StartQuizResponse, SubmitQuizResponse } from '../types/responses';
 
 const API_URL = 'http://localhost:8080';
 
@@ -10,6 +10,16 @@ export async function fetchProblems(): Promise<Problem[]> {
 
     if (!response.ok) {
         throw new Error(`Error fetching problems: ${response.status}`);
+    }
+
+    return response.json();
+}
+
+export async function startQuiz(): Promise<StartQuizResponse> {
+    const response = await fetch(`${API_URL}/quiz/start`);
+
+    if (!response.ok) {
+        throw new Error(`Error fetching questions: ${response.status}`);
     }
 
     return response.json();
