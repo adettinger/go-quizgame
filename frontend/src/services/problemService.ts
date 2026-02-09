@@ -1,6 +1,6 @@
 import { type Problem } from '../types/problem';
 import type { Question } from '../types/question';
-import type { QuestionSubmission } from '../types/requests';
+import type { QuestionSubmission, QuizSubmission } from '../types/requests';
 import type { StartQuizResponse, SubmitQuizResponse } from '../types/responses';
 
 const API_URL = 'http://localhost:8080';
@@ -67,7 +67,7 @@ export async function createProblem(data: ProblemFormData): Promise<Problem> {
     return response.json();
 };
 
-export async function submitQuiz(data: QuestionSubmission[]): Promise<SubmitQuizResponse> {
+export async function submitQuiz(data: QuizSubmission): Promise<SubmitQuizResponse> {
     const response = await fetch(`${API_URL}/quiz/submit`, {
         method: 'POST',
         headers: {

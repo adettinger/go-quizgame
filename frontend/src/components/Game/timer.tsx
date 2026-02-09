@@ -23,8 +23,6 @@ const TimerText = styled('div', {
 interface CountdownTimerProps {
     deadline: string | Date; // ISO string or Date object
     onExpire?: () => void;
-    warningThreshold?: number; // seconds when to show warning color
-    criticalThreshold?: number; // seconds when to show critical color
 }
 
 export function CountdownTimer(

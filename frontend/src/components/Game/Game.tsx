@@ -95,12 +95,19 @@ export function Game() {
         },
     })
 
+    const createQuizSubmission = () => {
+        return {
+            SessionId: sessionID,
+            Questions: quizItems ? Array.from(quizItems, (quizItem) => ({ Id: quizItem.Id, Answer: quizItem.Guess })) : [],
+        };
+    }
+
     const handleSubmit = async (event) => {
         event.preventDefault();
         console.log('submitting quiz with answers', quizItems);
 
         mutation.mutate(
-            quizItems ? Array.from(quizItems, (quizItem) => ({ Id: quizItem.Id, Answer: quizItem.Guess })) : []
+            createQuizSubmission()
         );
     };
 
@@ -108,7 +115,7 @@ export function Game() {
         console.log("Time's up!");
 
         mutation.mutate(
-            quizItems ? Array.from(quizItems, (quizItem) => ({ Id: quizItem.Id, Answer: quizItem.Guess })) : []
+            createQuizSubmission()
         );
     };
 
@@ -126,16 +133,11 @@ export function Game() {
 
     return (
         <>
-            {sessionID !== '' &&
-                <>
-                    <Text>Session ID: {sessionID}</Text>
-                    <CountdownTimer
-                        deadline={timeout !== undefined ? timeout : ''}
-                        onExpire={handleExpire}
-                        warningThreshold={30}
-                        criticalThreshold={10}
-                    />
-                </>
+            {timeout !== undefined && score < 0 &&
+                <CountdownTimer
+                    deadline={timeout !== undefined ? timeout : ''}
+                    onExpire={handleExpire}
+                />
             }
             {score >= 0 &&
                 <Text>Score: {score}</Text>

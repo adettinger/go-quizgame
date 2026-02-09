@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const QuizTimeout = time.Duration(5 * time.Minute)
+const QuizTimeout = time.Duration(30 * time.Second)
 
 type QuizController struct {
 	ds *webserver.DataStore
