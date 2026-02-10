@@ -10,6 +10,7 @@ import { ViewProblemPage } from './pages/ViewProblem';
 import { CreateProblemPage } from './pages/CreateProblem';
 import { ToastProvider } from './components/Toast/ToastContext';
 import { QuizPage } from './pages/QuizPage';
+import { GameHostPage } from './pages/GameHost';
 
 function App() {
 
@@ -31,6 +32,7 @@ function App() {
                 <Route path="/problem/:id" element={<ViewProblemPage />} />
                 <Route path="/problem/new" element={<CreateProblemPage />} />
                 <Route path="/quiz" element={<QuizPage />} />
+                <Route path="/game/host" element={<GameHostPage />} />
               </Routes>
             </div>
           </Theme>
