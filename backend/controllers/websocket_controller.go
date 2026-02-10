@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -33,6 +34,9 @@ func NewWebSocketController() *WebSocketController {
 
 // HandleConnection handles a new WebSocket connection
 func (wsc *WebSocketController) HandleConnection(c *gin.Context) {
+	fmt.Println("Hit handle connection")
+	playerName := c.Param("playerName")
+
 	conn, err := wsc.upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Printf("Failed to upgrade connection: %v", err)
@@ -47,12 +51,15 @@ func (wsc *WebSocketController) HandleConnection(c *gin.Context) {
 		Send:     make(chan []byte, 256),
 		UserData: make(map[string]interface{}),
 	}
+	client.UserData["name"] = playerName
 
 	wsc.manager.Register <- client
 
 	// Start goroutines for reading and writing
 	go wsc.readPump(client)
 	go wsc.writePump(client)
+
+	wsc.manager.Broadcast <- []byte(fmt.Sprint("Player connected: ", playerName))
 }
 
 // readPump pumps messages from the WebSocket connection to the manager

@@ -52,7 +52,7 @@ func main() {
 	router.GET("/quiz/start", quizController.StartQuiz)
 	router.POST("/quiz/submit", quizController.SubmitQuiz)
 
-	router.GET("/ws", wsController.HandleConnection)
+	router.GET("/liveGame/player/:playerName", wsController.HandleConnection)
 
 	router.Run("localhost:8080")
 }

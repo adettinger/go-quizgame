@@ -1,4 +1,4 @@
-import { Flex, Button, Table } from "@radix-ui/themes";
+import { Flex, Button, Table, TextField } from "@radix-ui/themes";
 import { useEffect, useRef, useState } from "react";
 
 enum messageType {
@@ -8,7 +8,7 @@ enum messageType {
     Error = "Error",
 }
 
-interface message {
+interface WebSocketMessage {
     type: messageType;
     message: string;
     time: Date;
@@ -16,8 +16,9 @@ interface message {
 
 
 export function WebSocketControl() {
+    const [playerName, setPlayerName] = useState('');
     const [isConnected, setIsConnected] = useState(false);
-    const [messages, setMessages] = useState<message[]>([]);
+    const [messages, setMessages] = useState<WebSocketMessage[]>([]);
     const [connectionStatus, setConnectionStatus] = useState('Disconnected');
     const socketRef = useRef<WebSocket | null>(null);
 
@@ -44,7 +45,7 @@ export function WebSocketControl() {
 
         try {
             setConnectionStatus('Connecting...');
-            socketRef.current = new WebSocket('ws://localhost:8080/ws');
+            socketRef.current = new WebSocket(`ws://localhost:8080/liveGame/player/${playerName}`);
 
             socketRef.current.onopen = () => {
                 setIsConnected(true);
@@ -93,20 +94,24 @@ export function WebSocketControl() {
 
     return (
         <Flex className="websocket-control" align="center" justify="center" direction="column" gap="3">
-            <h2>WebSocket Connection</h2>
-            <div className="status-indicator">
-                Status: <span className={`status-${connectionStatus.toLowerCase()}`}>{connectionStatus}</span>
-            </div>
+            <h2>Player View</h2>
 
-            <Flex className="button-container" direction="row" gap="3">
+            <Flex direction="row" gap="3">
+                <TextField.Root value={playerName} onChange={(event) => { setPlayerName(event.target.value) }} placeholder="Enter player name">
+                    <TextField.Slot></TextField.Slot>
+                </TextField.Root>
                 <Button
                     onClick={connectWebSocket}
-                    disabled={isConnected}
+                    disabled={isConnected || playerName === ""}
                     className={isConnected ? "button-disabled" : "button-connect"}
                 >
-                    Connect
+                    Join Game
                 </Button>
-
+            </Flex>
+            <div className="status-indicator">
+                WebSocket Status: <span className={`status-${connectionStatus.toLowerCase()}`}>{connectionStatus}</span>
+            </div>
+            <Flex direction="row" gap="3">
                 <Button
                     onClick={disconnectWebSocket}
                     disabled={!isConnected}
