@@ -21,6 +21,10 @@ func main() {
 
 	problemController := controllers.NewProblemController(ds)
 	quizController := controllers.NewQuizController(ds)
+	wsController := controllers.NewWebSocketController()
+
+	go wsController.GetManager().Start()
+
 	router := gin.Default()
 
 	router.Use(cors.New(cors.Config{
@@ -36,16 +40,19 @@ func main() {
 	router.GET("/ping", problemController.Ping)
 	router.GET("/hello", problemController.HelloWorld)
 
-	// Problem related
+	// Problem endpoints
 	router.GET("/problem", problemController.ListProblems)
 	router.GET("/problem/:id", problemController.GetProblemById)
 	router.DELETE("/problem/:id", problemController.DeleteProblem)
 	router.POST("/problem", problemController.AddProblem)
 	router.POST("/problem/save", problemController.SaveProblems)
 
+	// Quiz endpoints
 	router.GET("/quiz/questions", quizController.GetQuestions)
 	router.GET("/quiz/start", quizController.StartQuiz)
 	router.POST("/quiz/submit", quizController.SubmitQuiz)
+
+	router.GET("/ws", wsController.HandleConnection)
 
 	router.Run("localhost:8080")
 }
