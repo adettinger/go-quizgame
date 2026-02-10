@@ -1,4 +1,4 @@
-import { Flex, Button } from "@radix-ui/themes";
+import { Flex, Button, Table } from "@radix-ui/themes";
 import { useEffect, useRef, useState } from "react";
 
 interface message {
@@ -31,7 +31,7 @@ export function WebSocketControl() {
 
     const connectWebSocket = () => {
         if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-            setMessages(prev => [...prev, "Already connected!"]);
+            addMessage("admin", "Aleady connected!");
             return;
         }
 
@@ -42,26 +42,26 @@ export function WebSocketControl() {
             socketRef.current.onopen = () => {
                 setIsConnected(true);
                 setConnectionStatus('Connected');
-                setMessages(prev => [...prev, "Connection established"]);
+                addMessage("admin", "Connection established");
             };
 
             socketRef.current.onmessage = (event) => {
-                setMessages(prev => [...prev, `Received: ${event.data}`]);
+                addMessage("Received", `${event.data}`);
             };
 
             socketRef.current.onclose = () => {
                 setIsConnected(false);
                 setConnectionStatus('Disconnected');
-                setMessages(prev => [...prev, "Connection closed"]);
+                addMessage("admin", "Connection closed");
             };
 
             socketRef.current.onerror = (error) => {
                 setConnectionStatus('Error');
-                setMessages(prev => [...prev, `Error: ${error.type}`]);
+                addMessage("Error", `${error.type}`);
             };
         } catch (error) {
             setConnectionStatus('Error');
-            setMessages(prev => [...prev, `Connection error: ${error instanceof Error ? error.message : String(error)}`]);
+            addMessage("Error", `Connection error: ${error instanceof Error ? error.message : String(error)}`);
         }
     };
 
@@ -70,17 +70,17 @@ export function WebSocketControl() {
             socketRef.current.close();
             socketRef.current = null;
         } else {
-            setMessages(prev => [...prev, "No active connection to close"]);
+            addMessage("Error", "No active connection to close");
         }
     };
 
     const sendTestMessage = () => {
         if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-            const message = `Hello server! Time: ${new Date().toLocaleTimeString()}`;
+            const message = `Hello server!`;
             socketRef.current.send(message);
-            setMessages(prev => [...prev, `Sent: ${message}`]);
+            addMessage("Sent", `${message}`);
         } else {
-            setMessages(prev => [...prev, "Cannot send message: No connection"]);
+            addMessage("Error", "Cannot send message: No connection");
         }
     };
 
@@ -123,11 +123,24 @@ export function WebSocketControl() {
                     {messages.length === 0 ? (
                         <p className="no-messages">No messages yet</p>
                     ) : (
-                        messages.map((msg, index) => (
-                            <div key={index} className="message">
-                                {msg}
-                            </div>
-                        ))
+                        <Table.Root>
+                            <Table.Header>
+                                <Table.Row>
+                                    <Table.ColumnHeaderCell>Type</Table.ColumnHeaderCell>
+                                    <Table.ColumnHeaderCell>Message</Table.ColumnHeaderCell>
+                                    <Table.ColumnHeaderCell>Time</Table.ColumnHeaderCell>
+                                </Table.Row>
+                            </Table.Header>
+                            <Table.Body>
+                                {messages.map((msg) => (
+                                    <Table.Row>
+                                        <Table.Cell>{msg.type}</Table.Cell>
+                                        <Table.Cell>{msg.message}</Table.Cell>
+                                        <Table.Cell>{msg.time.toISOString()}</Table.Cell>
+                                    </Table.Row>
+                                ))}
+                            </Table.Body>
+                        </Table.Root>
                     )}
                 </div>
             </div>
