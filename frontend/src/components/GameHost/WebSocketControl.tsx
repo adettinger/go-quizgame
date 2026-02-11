@@ -1,17 +1,29 @@
 import { Flex, Button, Table, TextField } from "@radix-ui/themes";
 import { useEffect, useRef, useState } from "react";
 
-enum messageType {
+enum protocolType {
     Admin = "Admin",
     Sent = "Sent",
     Received = "Received",
     Error = "Error",
 }
 
+enum messageType {
+    MessageTypeAdmin = "admin",
+    MessageTypeSent = "sent",
+    MessageTypeChat = "chat",
+    MessageTypeJoin = "join",
+    MessageTypeLeave = "leave",
+    MessageTypeGameUpdate = "game_update",
+    MessageTypeError = "error",
+}
+
+
 interface WebSocketMessage {
     type: messageType;
-    message: string;
-    time: Date;
+    timestamp: Date;
+    playerName: string;
+    content: string;
 }
 
 
@@ -22,10 +34,33 @@ export function WebSocketControl() {
     const [connectionStatus, setConnectionStatus] = useState('Disconnected');
     const socketRef = useRef<WebSocket | null>(null);
 
-    const addMessage = (type: messageType, message: string) => {
-        setMessages(prev => [...prev,
-        { type: type, message: message, time: new Date() },
-        ]);
+    const addMessage = (message: WebSocketMessage) => {
+        setMessages(prev => [...prev, message]);
+    };
+
+    const createAdminMessage = (content: string): WebSocketMessage => {
+        return {
+            type: messageType.MessageTypeAdmin,
+            timestamp: new Date(),
+            playerName: '',
+            content: content,
+
+        }
+    };
+
+    const createErrorMessage = (content: string): WebSocketMessage => {
+        return {
+            type: messageType.MessageTypeError,
+            timestamp: new Date(),
+            playerName: '',
+            content: content,
+
+        }
+    };
+
+    const parseRawMessage = (event): WebSocketMessage => {
+        let rawMessage = JSON.parse(event.data)
+        return { ...rawMessage, timestamp: new Date(rawMessage.timestamp) }
     };
 
     // Clean up the WebSocket connection when component unmounts
@@ -39,7 +74,7 @@ export function WebSocketControl() {
 
     const connectWebSocket = () => {
         if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-            addMessage(messageType.Admin, "Aleady connected!");
+            addMessage(createAdminMessage("Aleady connected!"));
             return;
         }
 
@@ -50,26 +85,26 @@ export function WebSocketControl() {
             socketRef.current.onopen = () => {
                 setIsConnected(true);
                 setConnectionStatus('Connected');
-                addMessage(messageType.Admin, "Connection established");
+                addMessage(createAdminMessage("Connection established"));
             };
 
             socketRef.current.onmessage = (event) => {
-                addMessage(messageType.Received, `${event.data}`);
+                addMessage(parseRawMessage(event));
             };
 
             socketRef.current.onclose = () => {
                 setIsConnected(false);
                 setConnectionStatus('Disconnected');
-                addMessage(messageType.Admin, "Connection closed");
+                addMessage(createAdminMessage("Connection closed"));
             };
 
             socketRef.current.onerror = (error) => {
                 setConnectionStatus('Error');
-                addMessage(messageType.Error, `Error Type: "${error.type}"`);
+                addMessage(createErrorMessage(`${error.type}`));
             };
         } catch (error) {
             setConnectionStatus('Error');
-            addMessage(messageType.Error, `Connection error: ${error instanceof Error ? error.message : String(error)}`);
+            addMessage(createErrorMessage(`Connection error: ${error instanceof Error ? error.message : String(error)}`));
         }
     };
 
@@ -78,19 +113,19 @@ export function WebSocketControl() {
             socketRef.current.close();
             socketRef.current = null;
         } else {
-            addMessage(messageType.Error, "No active connection to close");
+            addMessage(createErrorMessage("No active connection to close"));
         }
     };
 
-    const sendTestMessage = () => {
-        if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-            const message = `Hello server!`;
-            socketRef.current.send(message);
-            addMessage(messageType.Sent, `${message}`);
-        } else {
-            addMessage(messageType.Error, "Cannot send message: No connection");
-        }
-    };
+    // const sendTestMessage = () => {
+    //     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+    //         const message = `Hello server!`;
+    //         socketRef.current.send(message);
+    //         addMessage(protocolType.Sent, `${message}`);
+    //     } else {
+    //         addMessage(protocolType.Error, "Cannot send message: No connection");
+    //     }
+    // };
 
     return (
         <Flex className="websocket-control" align="center" justify="center" direction="column" gap="3">
@@ -120,13 +155,13 @@ export function WebSocketControl() {
                     Disconnect
                 </Button>
 
-                <Button
+                {/* <Button
                     onClick={sendTestMessage}
                     disabled={!isConnected}
                     className={!isConnected ? "button-disabled" : "button-send"}
                 >
                     Send Test Message
-                </Button>
+                </Button> */}
             </Flex>
 
             <div className="message-log">
@@ -139,16 +174,18 @@ export function WebSocketControl() {
                             <Table.Header>
                                 <Table.Row>
                                     <Table.ColumnHeaderCell>Type</Table.ColumnHeaderCell>
-                                    <Table.ColumnHeaderCell>Message</Table.ColumnHeaderCell>
+                                    <Table.ColumnHeaderCell>PlayerName</Table.ColumnHeaderCell>
+                                    <Table.ColumnHeaderCell>Content</Table.ColumnHeaderCell>
                                     <Table.ColumnHeaderCell>Time</Table.ColumnHeaderCell>
                                 </Table.Row>
                             </Table.Header>
                             <Table.Body>
                                 {messages.map((msg) => (
                                     <Table.Row>
-                                        <Table.Cell>{msg.type}</Table.Cell>
-                                        <Table.Cell>{msg.message}</Table.Cell>
-                                        <Table.Cell>{msg.time.toISOString()}</Table.Cell>
+                                        <Table.Cell>{msg.type.charAt(0).toUpperCase() + msg.type.slice(1)}</Table.Cell>
+                                        <Table.Cell>{msg.playerName}</Table.Cell>
+                                        <Table.Cell>{msg.content}</Table.Cell>
+                                        <Table.Cell>{msg.timestamp.toISOString()}</Table.Cell>
                                     </Table.Row>
                                 ))}
                             </Table.Body>
