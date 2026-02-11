@@ -1,5 +1,6 @@
 import { Flex, Button, Table, TextField } from "@radix-ui/themes";
 import { useEffect, useRef, useState } from "react";
+import { ChatWindow, type chatMessage } from "./ChatWindow";
 
 enum protocolType {
     Admin = "Admin",
@@ -9,13 +10,13 @@ enum protocolType {
 }
 
 enum messageType {
-    MessageTypeAdmin = "admin",
-    MessageTypeSent = "sent",
-    MessageTypeChat = "chat",
-    MessageTypeJoin = "join",
-    MessageTypeLeave = "leave",
-    MessageTypeGameUpdate = "game_update",
-    MessageTypeError = "error",
+    Admin = "admin",
+    Sent = "sent",
+    Chat = "chat",
+    Join = "join",
+    Leave = "leave",
+    GameUpdate = "game_update",
+    Error = "error",
 }
 
 
@@ -33,30 +34,20 @@ export function WebSocketControl() {
     const [messages, setMessages] = useState<WebSocketMessage[]>([]);
     const [connectionStatus, setConnectionStatus] = useState('Disconnected');
     const socketRef = useRef<WebSocket | null>(null);
+    const [chatMessages, setChatMessages] = useState<chatMessage[]>([])
 
     const addMessage = (message: WebSocketMessage) => {
         setMessages(prev => [...prev, message]);
     };
 
-    const createAdminMessage = (content: string): WebSocketMessage => {
+    const createMessage = (type: messageType, content: string): WebSocketMessage => {
         return {
-            type: messageType.MessageTypeAdmin,
+            type: type,
             timestamp: new Date(),
             playerName: '',
             content: content,
-
         }
-    };
-
-    const createErrorMessage = (content: string): WebSocketMessage => {
-        return {
-            type: messageType.MessageTypeError,
-            timestamp: new Date(),
-            playerName: '',
-            content: content,
-
-        }
-    };
+    }
 
     const parseRawMessage = (event): WebSocketMessage => {
         let rawMessage = JSON.parse(event.data)
@@ -74,7 +65,7 @@ export function WebSocketControl() {
 
     const connectWebSocket = () => {
         if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-            addMessage(createAdminMessage("Aleady connected!"));
+            addMessage(createMessage(messageType.Admin, "Aleady connected!"));
             return;
         }
 
@@ -85,26 +76,36 @@ export function WebSocketControl() {
             socketRef.current.onopen = () => {
                 setIsConnected(true);
                 setConnectionStatus('Connected');
-                addMessage(createAdminMessage("Connection established"));
+                addMessage(createMessage(messageType.Admin, "Connection established"));
             };
 
             socketRef.current.onmessage = (event) => {
-                addMessage(parseRawMessage(event));
+                let msg = parseRawMessage(event);
+                switch (msg.type) {
+                    case messageType.Chat:
+                        setChatMessages(prev => [...prev, { playerName: msg.playerName, message: msg.content, timestamp: msg.timestamp }]);
+                        break;
+                    case messageType.Join:
+                    case messageType.Leave:
+                        setChatMessages(prev => [...prev, { playerName: "System", message: msg.playerName + " " + msg.content, timestamp: msg.timestamp }]);
+                        break;
+                }
+                addMessage(msg);
             };
 
             socketRef.current.onclose = () => {
                 setIsConnected(false);
                 setConnectionStatus('Disconnected');
-                addMessage(createAdminMessage("Connection closed"));
+                addMessage(createMessage(messageType.Admin, "Connection closed"));
             };
 
             socketRef.current.onerror = (error) => {
                 setConnectionStatus('Error');
-                addMessage(createErrorMessage(`${error.type}`));
+                addMessage(createMessage(messageType.Error, `${error.type}`));
             };
         } catch (error) {
             setConnectionStatus('Error');
-            addMessage(createErrorMessage(`Connection error: ${error instanceof Error ? error.message : String(error)}`));
+            addMessage(createMessage(messageType.Error, `Connection error: ${error instanceof Error ? error.message : String(error)}`));
         }
     };
 
@@ -113,19 +114,17 @@ export function WebSocketControl() {
             socketRef.current.close();
             socketRef.current = null;
         } else {
-            addMessage(createErrorMessage("No active connection to close"));
+            addMessage(createMessage(messageType.Error, "No active connection to close"));
         }
     };
 
-    // const sendTestMessage = () => {
-    //     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-    //         const message = `Hello server!`;
-    //         socketRef.current.send(message);
-    //         addMessage(protocolType.Sent, `${message}`);
-    //     } else {
-    //         addMessage(protocolType.Error, "Cannot send message: No connection");
-    //     }
-    // };
+    const sendChatMessage = (message: string) => {
+        if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+            socketRef.current.send(JSON.stringify(createMessage(messageType.Chat, message)));
+        } else {
+            addMessage(createMessage(messageType.Error, "Cannot send message: No connection"));
+        }
+    };
 
     return (
         <Flex className="websocket-control" align="center" justify="center" direction="column" gap="3">
@@ -163,6 +162,9 @@ export function WebSocketControl() {
                     Send Test Message
                 </Button> */}
             </Flex>
+            {isConnected &&
+                <ChatWindow onMessageSend={sendChatMessage} messages={chatMessages} />
+            }
 
             <div className="message-log">
                 <h3>Message Log</h3>
