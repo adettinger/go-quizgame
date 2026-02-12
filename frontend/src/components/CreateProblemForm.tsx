@@ -52,7 +52,6 @@ export function CreateProblemForm() {
     return (
         <Form.Root onSubmit={handleSubmit}>
             <Flex direction={"column"} gap="3">
-
                 <Form.Field name="Question">
                     <Form.Label>Question: </Form.Label>
                     <Form.Message match="valueMissing">

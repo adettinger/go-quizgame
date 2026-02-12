@@ -1,4 +1,4 @@
-import { Flex, Button, Table, TextField, Text } from "@radix-ui/themes";
+import { Flex, Button, TextField, Text } from "@radix-ui/themes";
 import { useEffect, useRef, useState } from "react";
 import { ChatWindow, type chatMessage } from "./ChatWindow";
 import { MessageLog } from "./MessageLog";

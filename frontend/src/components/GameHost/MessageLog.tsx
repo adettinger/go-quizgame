@@ -4,13 +4,13 @@ import type { WebSocketMessage } from "./WebSocketControl";
 export function MessageLog({ messages }: { messages: WebSocketMessage[] }) {
     return (
         <Card className="message-log" style={{ minWidth: '590px' }} >
-            <Flex direction="column" align="center">
+            <Flex direction="column" align="center" gap="3">
                 <Text align="center" weight="bold">Message Log</Text>
                 <div className="messages">
                     {messages.length === 0 ? (
                         <p className="no-messages">No messages yet</p>
                     ) : (
-                        <Table.Root>
+                        <Table.Root variant="surface">
                             <Table.Header>
                                 <Table.Row>
                                     <Table.ColumnHeaderCell>Type</Table.ColumnHeaderCell>
