@@ -69,7 +69,7 @@ export function WebSocketControl() {
 
         try {
             setConnectionStatus('Connecting...');
-            socketRef.current = new WebSocket(`ws://localhost:8080/liveGame/player/${playerName}`);
+            socketRef.current = new WebSocket(`ws://localhost:8080/liveGame/player/${playerName.trim()}`);
 
             socketRef.current.onopen = () => {
                 setIsConnected(true);
