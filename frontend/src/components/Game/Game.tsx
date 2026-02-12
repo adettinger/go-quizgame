@@ -1,4 +1,4 @@
-import { Button, Flex, Text } from "@radix-ui/themes";
+import { Button, Flex, Text, TextField } from "@radix-ui/themes";
 import * as Form from "@radix-ui/react-form";
 import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
@@ -151,20 +151,23 @@ export function Game() {
                                 <Flex direction={"column"}>
                                     <Form.Label>{problem.Question}</Form.Label>
                                     <Form.Control asChild>
-                                        <input
-                                            type="text"
-                                            // TODO: Find better style when input is disabled
-                                            style={{
-                                                color: !!problem.Correct ? (problem.Correct ? "green" : "red") : ""
-                                            }}
+                                        <TextField.Root
                                             required
                                             value={problem.Guess}
                                             onChange={(event) => updateGuess(problem.Id, event.target.value)}
-                                            disabled={score >= 0}
-                                        />
+                                            readOnly={score >= 0}
+                                        >
+                                            <TextField.Slot />
+                                        </TextField.Root>
                                     </Form.Control>
-                                    {problem.Correct === false &&
-                                        <Text color="red">{problem.Answer}</Text>
+                                    {problem.Correct !== undefined &&
+                                        <>
+                                            {problem.Correct === false ?
+                                                <Text color="red">{problem.Answer}</Text>
+                                                :
+                                                <Text color="green">Correct!</Text>
+                                            }
+                                        </>
                                     }
                                 </Flex>
                             </Form.Field>

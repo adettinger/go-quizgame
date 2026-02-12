@@ -1,25 +1,6 @@
 import { useState, useEffect } from 'react';
 import { differenceInSeconds } from 'date-fns';
-import { styled } from '@stitches/react';
-import { Flex, Text } from '@radix-ui/themes';
-
-// Styled components using Radix UI design principles
-const CountdownContainer = styled('div', {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px',
-    width: '100%',
-    maxWidth: '400px',
-});
-
-const TimerText = styled('div', {
-    display: 'flex',
-    justifyContent: 'space-between',
-    fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
-    fontSize: '14px',
-    fontWeight: 500,
-    color: '$slate11',
-});
+import { Card, Flex, Text } from '@radix-ui/themes';
 
 interface CountdownTimerProps {
     deadline: string | Date; // ISO string or Date object
@@ -36,11 +17,9 @@ export function CountdownTimer(
         const targetDate = props.deadline instanceof Date ? props.deadline : new Date(props.deadline);
         const now = new Date();
 
-        // Calculate initial values
         const initialSecondsLeft = Math.max(0, differenceInSeconds(targetDate, now));
         setSecondsLeft(initialSecondsLeft);
 
-        // Set up the interval
         const intervalId = setInterval(() => {
             const now = new Date();
             const remaining = Math.max(0, differenceInSeconds(targetDate, now));
@@ -58,7 +37,6 @@ export function CountdownTimer(
         return () => clearInterval(intervalId);
     }, [props.deadline, props.onExpire, isExpired]);
 
-    // Format the time remaining
     const formatTimeRemaining = () => {
         if (isExpired) return "Time's up!";
 
@@ -70,26 +48,11 @@ export function CountdownTimer(
     };
 
     return (
-        <Flex gap="3" justify={'center'}>
-            <Text>Time remaining</Text>
-            <Text>{formatTimeRemaining()}</Text>
+        <Flex gap="3" justify={'center'} align={"center"}>
+            <Text>Time remaining: </Text>
+            <Card style={{ backgroundColor: secondsLeft <= 10 ? "red" : "" }}>
+                <Text style={{ color: "black" }}>{formatTimeRemaining()}</Text>
+            </Card>
         </Flex>
     );
 };
-
-// const CountdownContainer = styled('div', {
-//     display: 'flex',
-//     flexDirection: 'column',
-//     gap: '8px',
-//     width: '100%',
-//     maxWidth: '400px',
-// });
-
-// const TimerText = styled('div', {
-//     display: 'flex',
-//     justifyContent: 'space-between',
-//     fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
-//     fontSize: '14px',
-//     fontWeight: 500,
-//     color: '$slate11',
-// });

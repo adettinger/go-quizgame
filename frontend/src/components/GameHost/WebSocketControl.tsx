@@ -133,7 +133,7 @@ export function WebSocketControl() {
 
             <Flex direction="row" gap="3">
                 <TextField.Root value={playerName} onChange={(event) => { setPlayerName(event.target.value) }} placeholder="Enter player name">
-                    <TextField.Slot></TextField.Slot>
+                    <TextField.Slot />
                 </TextField.Root>
                 <Button
                     onClick={connectWebSocket}
@@ -143,6 +143,7 @@ export function WebSocketControl() {
                     Join Game
                 </Button>
             </Flex>
+
             <div className="status-indicator">
                 WebSocket Status: <span className={`status-${connectionStatus.toLowerCase()}`}>{connectionStatus}</span>
             </div>
@@ -158,6 +159,7 @@ export function WebSocketControl() {
                     Disconnect
                 </Button>
             </Flex>
+
             {isConnected &&
                 <ChatWindow onMessageSend={sendChatMessage} messages={chatMessages} />
             }
