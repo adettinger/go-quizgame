@@ -1,13 +1,7 @@
 import { Flex, Button, Table, TextField, Text } from "@radix-ui/themes";
 import { useEffect, useRef, useState } from "react";
 import { ChatWindow, type chatMessage } from "./ChatWindow";
-
-enum protocolType {
-    Admin = "Admin",
-    Sent = "Sent",
-    Received = "Received",
-    Error = "Error",
-}
+import { MessageLog } from "./MessageLog";
 
 enum messageType {
     Admin = "admin",
@@ -20,7 +14,7 @@ enum messageType {
 }
 
 
-interface WebSocketMessage {
+export interface WebSocketMessage {
     type: messageType;
     timestamp: Date;
     playerName: string;
@@ -165,35 +159,7 @@ export function WebSocketControl() {
                 <ChatWindow onMessageSend={sendChatMessage} messages={chatMessages} />
             }
 
-            <div className="message-log">
-                <h3>Message Log</h3>
-                <div className="messages">
-                    {messages.length === 0 ? (
-                        <p className="no-messages">No messages yet</p>
-                    ) : (
-                        <Table.Root>
-                            <Table.Header>
-                                <Table.Row>
-                                    <Table.ColumnHeaderCell>Type</Table.ColumnHeaderCell>
-                                    <Table.ColumnHeaderCell>PlayerName</Table.ColumnHeaderCell>
-                                    <Table.ColumnHeaderCell>Content</Table.ColumnHeaderCell>
-                                    <Table.ColumnHeaderCell>Time</Table.ColumnHeaderCell>
-                                </Table.Row>
-                            </Table.Header>
-                            <Table.Body>
-                                {messages.map((msg) => (
-                                    <Table.Row>
-                                        <Table.Cell>{msg.type.charAt(0).toUpperCase() + msg.type.slice(1)}</Table.Cell>
-                                        <Table.Cell>{msg.playerName}</Table.Cell>
-                                        <Table.Cell>{msg.content}</Table.Cell>
-                                        <Table.Cell>{msg.timestamp.toISOString()}</Table.Cell>
-                                    </Table.Row>
-                                ))}
-                            </Table.Body>
-                        </Table.Root>
-                    )}
-                </div>
-            </div>
+            <MessageLog messages={messages} />
         </Flex>
     );
 };
