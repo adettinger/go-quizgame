@@ -32,6 +32,9 @@ export function WebSocketControl() {
     const [chatMessages, setChatMessages] = useState<chatMessage[]>([])
 
     const addMessage = (message: WebSocketMessage) => {
+        if (message.type != messageType.Error && serverError != '') {
+            setServerError('');
+        }
         setMessages(prev => [...prev, message]);
     };
 

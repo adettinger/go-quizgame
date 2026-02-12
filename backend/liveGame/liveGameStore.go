@@ -2,6 +2,7 @@ package livegame
 
 import (
 	"errors"
+	"slices"
 	"sync"
 
 	"github.com/google/uuid"
@@ -35,14 +36,33 @@ func (lgs *LiveGameStore) AddPlayer(name string) (uuid.UUID, error) {
 	return newPlayer.Id, nil
 }
 
-func (lgs *LiveGameStore) PlayerExistsByName(name string) bool {
+func (lgs *LiveGameStore) RemovePlayerByName(name string) error {
+	lgs.mutex.Lock()
+	defer lgs.mutex.Unlock()
+	prevPlayerCount := len(lgs.Players)
+	lgs.Players = slices.DeleteFunc(lgs.Players, func(p LivePlayer) bool {
+		return p.Name == name
+	})
+	if prevPlayerCount == len(lgs.Players) {
+		return errors.New("Cannot remove player: Player not found")
+	}
+	return nil
+}
+
+func (lgs *LiveGameStore) GetPlayerByName(name string) (LivePlayer, error) {
 	lgs.mutex.RLock()
 	defer lgs.mutex.RUnlock()
 
 	for _, p := range lgs.Players {
 		if p.Name == name {
-			return true
+			return p, nil
 		}
 	}
-	return false
+	return LivePlayer{}, errors.New("Player not found")
+}
+
+
+func (lgs *LiveGameStore) PlayerExistsByName(name string) bool {
+	_, err := lgs.GetPlayerByName(name)
+	return err == nil
 }

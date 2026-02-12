@@ -43,7 +43,7 @@ export function ChatWindow(props: chatWindowProps) {
                     >
                         <TextField.Slot />
                     </TextField.Root>
-                    <Button onClick={() => { props.onMessageSend(chatLine); setChatLine(''); }}>Send</Button>
+                    <Button onClick={() => { props.onMessageSend(chatLine); setChatLine(''); }} disabled={chatLine == ''} >Send</Button>
                 </Flex>
             </Flex>
         </Card>

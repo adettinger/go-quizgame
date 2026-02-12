@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/adettinger/go-quizgame/livegame"
 	"github.com/adettinger/go-quizgame/models"
 	"github.com/adettinger/go-quizgame/socket"
 	"github.com/gin-gonic/gin"
@@ -17,9 +16,8 @@ import (
 
 // WebSocketController handles WebSocket connections
 type WebSocketController struct {
-	manager       *socket.Manager
-	upgrader      websocket.Upgrader
-	liveGameStore *livegame.LiveGameStore
+	manager  *socket.Manager
+	upgrader websocket.Upgrader
 }
 
 // NewWebSocketController creates a new WebSocket controller
@@ -34,7 +32,6 @@ func NewWebSocketController() *WebSocketController {
 				return true
 			},
 		},
-		liveGameStore: livegame.NewLiveGameStore(),
 	}
 }
 
@@ -65,7 +62,7 @@ func (wsc *WebSocketController) HandleConnection(c *gin.Context) {
 	client.UserData["name"] = playerName
 	log.Print("New Client created")
 
-	_, err = wsc.liveGameStore.AddPlayer(playerName)
+	_, err = wsc.manager.LiveGameStore.AddPlayer(playerName)
 	if err != nil {
 		//TODO: handle duplicate player names
 		errorToSend := models.Message{
@@ -90,7 +87,6 @@ func (wsc *WebSocketController) HandleConnection(c *gin.Context) {
 		close(client.Send)
 		client.Conn.Close()
 		return
-		// TODO: Kill session?
 	}
 
 	wsc.manager.Register <- client

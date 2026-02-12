@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	livegame "github.com/adettinger/go-quizgame/liveGame"
 	"github.com/adettinger/go-quizgame/models"
 	"github.com/gorilla/websocket"
 )
@@ -20,20 +21,22 @@ type Client struct {
 
 // Manager manages WebSocket connections
 type Manager struct {
-	Clients    map[string]*Client
-	Register   chan *Client
-	Unregister chan *Client
-	Broadcast  chan models.Message
-	mutex      sync.Mutex
+	Clients       map[string]*Client
+	Register      chan *Client
+	Unregister    chan *Client
+	Broadcast     chan models.Message
+	LiveGameStore *livegame.LiveGameStore
+	mutex         sync.Mutex
 }
 
 // Creates a new WebSocket manager
 func NewManager() *Manager {
 	return &Manager{
-		Clients:    make(map[string]*Client),
-		Register:   make(chan *Client),
-		Unregister: make(chan *Client),
-		Broadcast:  make(chan models.Message),
+		Clients:       make(map[string]*Client),
+		Register:      make(chan *Client),
+		Unregister:    make(chan *Client),
+		Broadcast:     make(chan models.Message),
+		LiveGameStore: livegame.NewLiveGameStore(),
 	}
 }
 
@@ -75,6 +78,7 @@ func (m *Manager) Start() {
 				}()
 
 				go func() {
+					m.LiveGameStore.RemovePlayerByName(client.UserData["name"].(string))
 					log.Printf("Broadcasting leave message for %s", client.UserData["name"].(string))
 					m.BroadcastMessage(leaveMsg)
 				}()
