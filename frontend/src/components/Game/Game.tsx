@@ -132,7 +132,7 @@ export function Game() {
     }
 
     return (
-        <>
+        <Flex direction={"column"} gap="3" justify="center" style={{ width: '50%', marginLeft: 'auto', marginRight: 'auto', paddingTop: '10px' }}>
             {timeout !== undefined && score < 0 &&
                 <CountdownTimer
                     deadline={timeout !== undefined ? timeout : ''}
@@ -143,36 +143,38 @@ export function Game() {
                 <Text>Score: {score}</Text>
             }
             <Form.Root onSubmit={handleSubmit}>
-                <Flex direction={"column"} gap="3" width={"50%"} justify="center">
+                <Flex direction={"column"} gap="3" justify="center">
 
-                    {quizItems?.map((problem) => (
-                        <Form.Field name={`Question-${problem.Id}`}>
-                            <Flex direction="column" gap="3">
-                                <Form.Label>{problem.Question}</Form.Label>
-                                <Form.Control asChild>
-                                    <input
-                                        type="text"
-                                        // TODO: Find better style when input is disabled
-                                        style={{
-                                            color: !!problem.Correct ? (problem.Correct ? "green" : "red") : ""
-                                        }}
-                                        required
-                                        value={problem.Guess}
-                                        onChange={(event) => updateGuess(problem.Id, event.target.value)}
-                                        disabled={score >= 0}
-                                    />
-                                </Form.Control>
-                                {problem.Correct === false &&
-                                    <Text color="red">{problem.Answer}</Text>
-                                }
-                            </Flex>
-                        </Form.Field>
-                    ))}
+                    <Flex direction="column" gap="3">
+                        {quizItems?.map((problem) => (
+                            <Form.Field name={`Question-${problem.Id}`}>
+                                <Flex direction={"column"}>
+                                    <Form.Label>{problem.Question}</Form.Label>
+                                    <Form.Control asChild>
+                                        <input
+                                            type="text"
+                                            // TODO: Find better style when input is disabled
+                                            style={{
+                                                color: !!problem.Correct ? (problem.Correct ? "green" : "red") : ""
+                                            }}
+                                            required
+                                            value={problem.Guess}
+                                            onChange={(event) => updateGuess(problem.Id, event.target.value)}
+                                            disabled={score >= 0}
+                                        />
+                                    </Form.Control>
+                                    {problem.Correct === false &&
+                                        <Text color="red">{problem.Answer}</Text>
+                                    }
+                                </Flex>
+                            </Form.Field>
+                        ))}
+                    </Flex>
                     <Form.Submit asChild>
-                        <Button disabled={score >= 0}>Submit Quiz</Button>
+                        <Button disabled={score >= 0} style={{ alignSelf: 'center' }}> Submit Quiz </Button>
                     </Form.Submit>
                 </Flex>
             </Form.Root>
-        </>
+        </Flex>
     );
 }

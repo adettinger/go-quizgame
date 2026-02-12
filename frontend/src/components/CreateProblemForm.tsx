@@ -1,4 +1,4 @@
-import { Button } from "@radix-ui/themes";
+import { Button, Flex } from "@radix-ui/themes";
 import * as Form from "@radix-ui/react-form";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -51,38 +51,41 @@ export function CreateProblemForm() {
 
     return (
         <Form.Root onSubmit={handleSubmit}>
-            <Form.Field name="Question">
-                <Form.Label>Question: </Form.Label>
-                <Form.Message match="valueMissing">
-                    Please enter a question
-                </Form.Message>
-                <Form.Control asChild>
-                    <input
-                        type="text"
-                        required
-                        value={formValues.Question}
-                        onChange={(event) => { setFormValues({ ...formValues, Question: event.target.value }) }}
-                    />
-                </Form.Control>
-            </Form.Field>
+            <Flex direction={"column"} gap="3">
 
-            <Form.Field name="Answer">
-                <Form.Label>Answer: </Form.Label>
-                <Form.Message match="valueMissing">
-                    Please enter a answer
-                </Form.Message>
-                <Form.Control asChild>
-                    <input
-                        type="text"
-                        required
-                        value={formValues.Answer}
-                        onChange={(event) => { setFormValues({ ...formValues, Answer: event.target.value }) }}
-                    />
-                </Form.Control>
-            </Form.Field>
-            <Form.Submit asChild>
-                <Button disabled={!areAllFieldsValid()}>Post a question</Button>
-            </Form.Submit>
-        </Form.Root>
+                <Form.Field name="Question">
+                    <Form.Label>Question: </Form.Label>
+                    <Form.Message match="valueMissing">
+                        Please enter a question
+                    </Form.Message>
+                    <Form.Control asChild>
+                        <input
+                            type="text"
+                            required
+                            value={formValues.Question}
+                            onChange={(event) => { setFormValues({ ...formValues, Question: event.target.value }) }}
+                        />
+                    </Form.Control>
+                </Form.Field>
+
+                <Form.Field name="Answer">
+                    <Form.Label>Answer: </Form.Label>
+                    <Form.Message match="valueMissing">
+                        Please enter a answer
+                    </Form.Message>
+                    <Form.Control asChild>
+                        <input
+                            type="text"
+                            required
+                            value={formValues.Answer}
+                            onChange={(event) => { setFormValues({ ...formValues, Answer: event.target.value }) }}
+                        />
+                    </Form.Control>
+                </Form.Field>
+                <Form.Submit asChild >
+                    <Button disabled={!areAllFieldsValid()} style={{ alignSelf: 'center' }}>Post a question</Button>
+                </Form.Submit>
+            </Flex>
+        </Form.Root >
     );
 };

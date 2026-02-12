@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { differenceInSeconds } from 'date-fns';
 import { styled } from '@stitches/react';
+import { Flex, Text } from '@radix-ui/themes';
 
 // Styled components using Radix UI design principles
 const CountdownContainer = styled('div', {
@@ -69,11 +70,26 @@ export function CountdownTimer(
     };
 
     return (
-        <CountdownContainer>
-            <TimerText>
-                <span>Time remaining</span>
-                <span>{formatTimeRemaining()}</span>
-            </TimerText>
-        </CountdownContainer>
+        <Flex gap="3" justify={'center'}>
+            <Text>Time remaining</Text>
+            <Text>{formatTimeRemaining()}</Text>
+        </Flex>
     );
 };
+
+// const CountdownContainer = styled('div', {
+//     display: 'flex',
+//     flexDirection: 'column',
+//     gap: '8px',
+//     width: '100%',
+//     maxWidth: '400px',
+// });
+
+// const TimerText = styled('div', {
+//     display: 'flex',
+//     justifyContent: 'space-between',
+//     fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+//     fontSize: '14px',
+//     fontWeight: 500,
+//     color: '$slate11',
+// });
