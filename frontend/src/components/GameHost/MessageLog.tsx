@@ -3,7 +3,7 @@ import type { WebSocketMessage } from "./WebSocketControl";
 
 export function MessageLog({ messages }: { messages: WebSocketMessage[] }) {
     return (
-        <Card className="message-log" style={{ minWidth: '590px' }} >
+        <Card className="message-log" style={{ minWidth: '590px', maxWidth: '80%' }} >
             <Flex direction="column" align="center" gap="3">
                 <Text align="center" weight="bold">Message Log</Text>
                 <div className="messages">

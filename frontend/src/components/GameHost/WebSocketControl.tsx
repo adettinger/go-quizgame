@@ -1,6 +1,6 @@
 import { Flex, Button, TextField, Text } from "@radix-ui/themes";
 import { useEffect, useRef, useState } from "react";
-import { ChatWindow, type chatMessage } from "./ChatWindow";
+import { ChatWindow, type chatMessage } from "../ChatWindow/ChatWindow";
 import { MessageLog } from "./MessageLog";
 
 enum messageType {
@@ -132,12 +132,22 @@ export function WebSocketControl() {
             <h2>Player View</h2>
 
             <Flex direction="row" gap="3">
-                <TextField.Root value={playerName} onChange={(event) => { setPlayerName(event.target.value) }} placeholder="Enter player name">
+                <TextField.Root
+                    value={playerName}
+                    onChange={(event) => { setPlayerName(event.target.value) }}
+                    placeholder="Enter player name"
+                    disabled={isConnected}
+                    onKeyDown={(event) => {
+                        if (event.key === 'Enter' && playerName.trim() !== '') {
+                            connectWebSocket();
+                        }
+                    }}
+                >
                     <TextField.Slot />
                 </TextField.Root>
                 <Button
                     onClick={connectWebSocket}
-                    disabled={isConnected || playerName === ""}
+                    disabled={isConnected || playerName.trim() === ""}
                     className={isConnected ? "button-disabled" : "button-connect"}
                 >
                     Join Game
