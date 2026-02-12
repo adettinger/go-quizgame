@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/adettinger/go-quizgame/livegame"
 	"github.com/adettinger/go-quizgame/models"
 	"github.com/adettinger/go-quizgame/socket"
 	"github.com/gin-gonic/gin"
@@ -16,8 +17,9 @@ import (
 
 // WebSocketController handles WebSocket connections
 type WebSocketController struct {
-	manager  *socket.Manager
-	upgrader websocket.Upgrader
+	manager       *socket.Manager
+	upgrader      websocket.Upgrader
+	liveGameStore *livegame.LiveGameStore
 }
 
 // NewWebSocketController creates a new WebSocket controller
@@ -32,6 +34,7 @@ func NewWebSocketController() *WebSocketController {
 				return true
 			},
 		},
+		liveGameStore: livegame.NewLiveGameStore(),
 	}
 }
 
@@ -62,6 +65,34 @@ func (wsc *WebSocketController) HandleConnection(c *gin.Context) {
 	client.UserData["name"] = playerName
 	log.Print("New Client created")
 
+	_, err = wsc.liveGameStore.AddPlayer(playerName)
+	if err != nil {
+		//TODO: handle duplicate player names
+		errorToSend := models.Message{
+			Type:       models.MessageTypeError,
+			Timestamp:  time.Now(),
+			PlayerName: "System",
+			Content:    "Player name is already used",
+		}
+		jsonMessage, err := json.Marshal(errorToSend)
+		if err != nil {
+			log.Printf("[%s] Error marshaling message: %v", client.ID, err)
+			close(client.Send)
+			client.Conn.Close()
+			return
+		}
+		if err := client.Conn.WriteMessage(websocket.TextMessage, jsonMessage); err != nil {
+			log.Printf("[%s] Error writing message: %v", client.ID, err)
+			close(client.Send)
+			client.Conn.Close()
+			return
+		}
+		close(client.Send)
+		client.Conn.Close()
+		return
+		// TODO: Kill session?
+	}
+
 	wsc.manager.Register <- client
 	log.Print("New Client registered")
 
@@ -77,7 +108,7 @@ func (wsc *WebSocketController) HandleConnection(c *gin.Context) {
 		Content:    fmt.Sprintf("Welcome, %s!", playerName),
 	}
 	client.Send <- welcomeMsg
-	log.Print("Welcom msg sent")
+	log.Print("Welcome msg sent")
 }
 
 // readPump pumps messages from the WebSocket connection to the manager
@@ -197,29 +228,6 @@ func (wsc *WebSocketController) writePump(client *socket.Client) {
 		}
 	}
 }
-
-// w, err := client.Conn.NextWriter(websocket.TextMessage)
-// if err != nil {
-// 	return
-// }
-// w.Write(jsonMessage)
-
-// // Add queued messages to the current WebSocket message
-// n := len(client.Send)
-// for range n {
-// 	nextMsg := <-client.Send
-// 	jsonNextMsg, err := json.Marshal(nextMsg)
-// 	if err != nil {
-// 		log.Printf("Error marshaling queued message: %v", err)
-// 		continue
-// 	}
-// 	w.Write([]byte("\n")) // Add newline separator
-// 	w.Write(jsonNextMsg)
-// }
-
-// if err := w.Close(); err != nil {
-// 	return
-// }
 
 // GetManager returns the WebSocket manager
 func (wsc *WebSocketController) GetManager() *socket.Manager {

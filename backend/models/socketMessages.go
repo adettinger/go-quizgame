@@ -20,3 +20,7 @@ type Message struct {
 	PlayerName string      `json:"playerName,omitempty"`
 	Content    interface{} `json:"content,omitempty"`
 }
+
+type PlayerListContent struct {
+	PlayerList []string
+}

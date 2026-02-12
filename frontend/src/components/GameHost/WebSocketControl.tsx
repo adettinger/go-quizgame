@@ -1,4 +1,4 @@
-import { Flex, Button, Table, TextField } from "@radix-ui/themes";
+import { Flex, Button, Table, TextField, Text } from "@radix-ui/themes";
 import { useEffect, useRef, useState } from "react";
 import { ChatWindow, type chatMessage } from "./ChatWindow";
 
@@ -30,6 +30,7 @@ interface WebSocketMessage {
 
 export function WebSocketControl() {
     const [playerName, setPlayerName] = useState('');
+    const [serverError, setServerError] = useState('');
     const [isConnected, setIsConnected] = useState(false);
     const [messages, setMessages] = useState<WebSocketMessage[]>([]);
     const [connectionStatus, setConnectionStatus] = useState('Disconnected');
@@ -89,6 +90,9 @@ export function WebSocketControl() {
                     case messageType.Leave:
                         setChatMessages(prev => [...prev, { playerName: "System", message: msg.playerName + " " + msg.content, timestamp: msg.timestamp }]);
                         break;
+                    case messageType.Error:
+                        setServerError(msg.content);
+                        break;
                 }
                 addMessage(msg);
             };
@@ -145,6 +149,9 @@ export function WebSocketControl() {
             <div className="status-indicator">
                 WebSocket Status: <span className={`status-${connectionStatus.toLowerCase()}`}>{connectionStatus}</span>
             </div>
+            {serverError !== '' &&
+                <Text color="red">Error: {serverError}</Text>
+            }
             <Flex direction="row" gap="3">
                 <Button
                     onClick={disconnectWebSocket}
@@ -153,14 +160,6 @@ export function WebSocketControl() {
                 >
                     Disconnect
                 </Button>
-
-                {/* <Button
-                    onClick={sendTestMessage}
-                    disabled={!isConnected}
-                    className={!isConnected ? "button-disabled" : "button-send"}
-                >
-                    Send Test Message
-                </Button> */}
             </Flex>
             {isConnected &&
                 <ChatWindow onMessageSend={sendChatMessage} messages={chatMessages} />
