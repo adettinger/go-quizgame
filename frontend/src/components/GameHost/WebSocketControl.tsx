@@ -1,4 +1,4 @@
-import { Flex, Button, TextField, Text } from "@radix-ui/themes";
+import { Flex, Button, TextField, Text, Card } from "@radix-ui/themes";
 import { useEffect, useRef, useState } from "react";
 import { ChatWindow, type chatMessage } from "../ChatWindow/ChatWindow";
 import { MessageLog } from "./MessageLog";
@@ -97,14 +97,28 @@ export function WebSocketControl() {
                         }
                         break;
                     case messageType.Join:
+                        setPlayerList(prev => {
+                            if (prev.includes(msg.playerName)) {
+                                return prev;
+                            }
+                            return [...prev, msg.playerName]
+                        });
+                        if ('Text' in msg.content) {
+                            let msgToAdd = `${msg.playerName} ${msg.content.Text}`
+                            setChatMessages(prev => [...prev, { playerName: "System", message: msgToAdd, timestamp: msg.timestamp }]);
+                        }
+                        break;
                     case messageType.Leave:
+                        setPlayerList(prev => prev.filter(name => name !== msg.playerName));
                         if ('Text' in msg.content) {
                             let msgToAdd = `${msg.playerName} ${msg.content.Text}`
                             setChatMessages(prev => [...prev, { playerName: "System", message: msgToAdd, timestamp: msg.timestamp }]);
                         }
                         break;
                     case messageType.PlayerList:
-                        console.log('received player list', msg.content);
+                        if ('Names' in msg.content) {
+                            setPlayerList(msg.content?.Names);
+                        }
                         break;
                     case messageType.Error:
                         if ('Text' in msg.content) {
@@ -189,6 +203,12 @@ export function WebSocketControl() {
                 >
                     Disconnect
                 </Button>
+            </Flex>
+
+            <Flex gap="3">
+                {isConnected && playerList.map((player) => (
+                    <Card>{player}</Card>
+                ))}
             </Flex>
 
             {isConnected &&
