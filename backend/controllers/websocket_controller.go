@@ -69,7 +69,7 @@ func (wsc *WebSocketController) HandleConnection(c *gin.Context) {
 			Type:       models.MessageTypeError,
 			Timestamp:  time.Now(),
 			PlayerName: "System",
-			Content:    "Player name is already used",
+			Content:    models.MessageTextContent{Text: "Player name is already used"},
 		}
 		jsonMessage, err := json.Marshal(errorToSend)
 		if err != nil {
@@ -101,10 +101,17 @@ func (wsc *WebSocketController) HandleConnection(c *gin.Context) {
 		Type:       models.MessageTypeChat,
 		Timestamp:  time.Now(),
 		PlayerName: "System",
-		Content:    fmt.Sprintf("Welcome, %s!", playerName),
+		Content:    models.MessageTextContent{Text: fmt.Sprintf("Welcome, %s!", playerName)},
 	}
 	client.Send <- welcomeMsg
-	log.Print("Welcome msg sent")
+
+	existingPlayers := models.Message{
+		Type:       models.MessageTypePlayerList,
+		Timestamp:  time.Now(),
+		PlayerName: "System",
+		Content:    models.PlayerListMessageContent{Names: wsc.manager.LiveGameStore.GetPlayerNameList()},
+	}
+	client.Send <- existingPlayers
 }
 
 // readPump pumps messages from the WebSocket connection to the manager
@@ -146,7 +153,7 @@ func (wsc *WebSocketController) readPump(client *socket.Client) {
 			errorMsg := models.Message{
 				Type:      models.MessageTypeError,
 				Timestamp: time.Now(),
-				Content:   "Invalid message format",
+				Content:   models.MessageTextContent{Text: "Invalid message format"},
 			}
 			select {
 			case client.Send <- errorMsg:
@@ -166,6 +173,17 @@ func (wsc *WebSocketController) readPump(client *socket.Client) {
 		// Process the message based on its type
 		switch message.Type {
 		case models.MessageTypeChat:
+			// ****TODO: Validate type
+			// log.Printf("Received message content, %v", message.Content)
+			// _, ok := message.Content.(models.MessageTextContent)
+			// if !ok {
+			// 	log.Printf("[%s] Unknown message type: %s", client.ID, message.Type)
+			// 	client.Send <- models.Message{
+			// 		Type:      models.MessageTypeError,
+			// 		Timestamp: time.Now(),
+			// 		Content:   models.MessageTextContent{Text: "Invalid message format"},
+			// 	}
+			// }
 			log.Printf("[%s] Broadcasting chat message", client.ID)
 			wsc.manager.BroadcastMessage(message)
 		case models.MessageTypeGameUpdate:

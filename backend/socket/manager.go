@@ -58,7 +58,7 @@ func (m *Manager) Start() {
 					Type:       models.MessageTypeJoin,
 					Timestamp:  time.Now(),
 					PlayerName: client.UserData["name"].(string),
-					Content:    "has joined the game",
+					Content:    models.MessageTextContent{Text: "has joined the game"},
 				})
 			}()
 		case client := <-m.Unregister:
@@ -67,7 +67,7 @@ func (m *Manager) Start() {
 					Type:       models.MessageTypeLeave,
 					Timestamp:  time.Now(),
 					PlayerName: client.UserData["name"].(string),
-					Content:    "has left the game",
+					Content:    models.MessageTextContent{Text: "has left the game"},
 				}
 				func() {
 					m.mutex.Lock()

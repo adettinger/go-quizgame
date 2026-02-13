@@ -24,7 +24,7 @@ export function MessageLog({ messages }: { messages: WebSocketMessage[] }) {
                                     <Table.Row>
                                         <Table.Cell>{msg.type.charAt(0).toUpperCase() + msg.type.slice(1)}</Table.Cell>
                                         <Table.Cell>{msg.playerName}</Table.Cell>
-                                        <Table.Cell>{msg.content}</Table.Cell>
+                                        <Table.Cell>{JSON.stringify(msg.content)}</Table.Cell>
                                         <Table.Cell>{msg.timestamp.toISOString()}</Table.Cell>
                                     </Table.Row>
                                 ))}

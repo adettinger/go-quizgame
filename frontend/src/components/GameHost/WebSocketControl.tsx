@@ -11,6 +11,15 @@ enum messageType {
     Leave = "leave",
     GameUpdate = "game_update",
     Error = "error",
+    PlayerList = "player_list"
+}
+
+interface MessageTextContent {
+    Text: string;
+}
+
+interface MessagePlayerListContent {
+    Names: string[];
 }
 
 
@@ -18,7 +27,7 @@ export interface WebSocketMessage {
     type: messageType;
     timestamp: Date;
     playerName: string;
-    content: string;
+    content: MessageTextContent | MessagePlayerListContent; //Set to union of possible message content types that are defined in backend
 }
 
 
@@ -26,30 +35,31 @@ export function WebSocketControl() {
     const [playerName, setPlayerName] = useState('');
     const [serverError, setServerError] = useState('');
     const [isConnected, setIsConnected] = useState(false);
+    const [playerList, setPlayerList] = useState<string[]>([]);
     const [messages, setMessages] = useState<WebSocketMessage[]>([]);
     const [connectionStatus, setConnectionStatus] = useState('Disconnected');
     const socketRef = useRef<WebSocket | null>(null);
     const [chatMessages, setChatMessages] = useState<chatMessage[]>([])
 
     const addMessage = (message: WebSocketMessage) => {
-        if (message.type != messageType.Error && serverError != '') {
+        if (message.type != messageType.Error && serverError != '') { //redundant
             setServerError('');
         }
         setMessages(prev => [...prev, message]);
     };
 
-    const createMessage = (type: messageType, content: string): WebSocketMessage => {
+    const createTextMessage = (type: messageType, content: string): WebSocketMessage => {
         return {
             type: type,
             timestamp: new Date(),
             playerName: '',
-            content: content,
+            content: { Text: content },
         }
     }
 
     const parseRawMessage = (event): WebSocketMessage => {
-        let rawMessage = JSON.parse(event.data)
-        return { ...rawMessage, timestamp: new Date(rawMessage.timestamp) }
+        let parsedMsg = JSON.parse(event.data)
+        return { ...parsedMsg, timestamp: new Date(parsedMsg.timestamp) }
     };
 
     // Clean up the WebSocket connection when component unmounts
@@ -63,7 +73,7 @@ export function WebSocketControl() {
 
     const connectWebSocket = () => {
         if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-            addMessage(createMessage(messageType.Admin, "Aleady connected!"));
+            addMessage(createTextMessage(messageType.Admin, "Aleady connected!"));
             return;
         }
 
@@ -74,21 +84,32 @@ export function WebSocketControl() {
             socketRef.current.onopen = () => {
                 setIsConnected(true);
                 setConnectionStatus('Connected');
-                addMessage(createMessage(messageType.Admin, "Connection established"));
+                addMessage(createTextMessage(messageType.Admin, "Connection established"));
             };
 
             socketRef.current.onmessage = (event) => {
                 let msg = parseRawMessage(event);
                 switch (msg.type) {
                     case messageType.Chat:
-                        setChatMessages(prev => [...prev, { playerName: msg.playerName, message: msg.content, timestamp: msg.timestamp }]);
+                        if ('Text' in msg.content) {
+                            let msgToAdd = msg.content.Text;
+                            setChatMessages(prev => [...prev, { playerName: msg.playerName, message: msgToAdd, timestamp: msg.timestamp }]);
+                        }
                         break;
                     case messageType.Join:
                     case messageType.Leave:
-                        setChatMessages(prev => [...prev, { playerName: "System", message: msg.playerName + " " + msg.content, timestamp: msg.timestamp }]);
+                        if ('Text' in msg.content) {
+                            let msgToAdd = `${msg.playerName} ${msg.content.Text}`
+                            setChatMessages(prev => [...prev, { playerName: "System", message: msgToAdd, timestamp: msg.timestamp }]);
+                        }
+                        break;
+                    case messageType.PlayerList:
+                        console.log('received player list', msg.content);
                         break;
                     case messageType.Error:
-                        setServerError(msg.content);
+                        if ('Text' in msg.content) {
+                            setServerError(msg.content.Text);
+                        }
                         break;
                 }
                 addMessage(msg);
@@ -97,16 +118,16 @@ export function WebSocketControl() {
             socketRef.current.onclose = () => {
                 setIsConnected(false);
                 setConnectionStatus('Disconnected');
-                addMessage(createMessage(messageType.Admin, "Connection closed"));
+                addMessage(createTextMessage(messageType.Admin, "Connection closed"));
             };
 
             socketRef.current.onerror = (error) => {
                 setConnectionStatus('Error');
-                addMessage(createMessage(messageType.Error, `${error.type}`));
+                addMessage(createTextMessage(messageType.Error, `${error.type}`));
             };
         } catch (error) {
             setConnectionStatus('Error');
-            addMessage(createMessage(messageType.Error, `Connection error: ${error instanceof Error ? error.message : String(error)}`));
+            addMessage(createTextMessage(messageType.Error, `Connection error: ${error instanceof Error ? error.message : String(error)}`));
         }
     };
 
@@ -115,15 +136,15 @@ export function WebSocketControl() {
             socketRef.current.close();
             socketRef.current = null;
         } else {
-            addMessage(createMessage(messageType.Error, "No active connection to close"));
+            addMessage(createTextMessage(messageType.Error, "No active connection to close"));
         }
     };
 
     const sendChatMessage = (message: string) => {
         if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-            socketRef.current.send(JSON.stringify(createMessage(messageType.Chat, message)));
+            socketRef.current.send(JSON.stringify(createTextMessage(messageType.Chat, message)));
         } else {
-            addMessage(createMessage(messageType.Error, "Cannot send message: No connection"));
+            addMessage(createTextMessage(messageType.Error, "Cannot send message: No connection"));
         }
     };
 

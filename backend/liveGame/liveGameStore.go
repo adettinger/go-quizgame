@@ -49,6 +49,17 @@ func (lgs *LiveGameStore) RemovePlayerByName(name string) error {
 	return nil
 }
 
+func (lgs *LiveGameStore) GetPlayerNameList() []string {
+	lgs.mutex.RLock()
+	defer lgs.mutex.RUnlock()
+
+	playerList := make([]string, len(lgs.Players))
+	for i, p := range lgs.Players {
+		playerList[i] = p.Name
+	}
+	return playerList
+}
+
 func (lgs *LiveGameStore) GetPlayerByName(name string) (LivePlayer, error) {
 	lgs.mutex.RLock()
 	defer lgs.mutex.RUnlock()
@@ -60,7 +71,6 @@ func (lgs *LiveGameStore) GetPlayerByName(name string) (LivePlayer, error) {
 	}
 	return LivePlayer{}, errors.New("Player not found")
 }
-
 
 func (lgs *LiveGameStore) PlayerExistsByName(name string) bool {
 	_, err := lgs.GetPlayerByName(name)
