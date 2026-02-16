@@ -205,9 +205,9 @@ export function WebSocketControl() {
                 </Button>
             </Flex>
 
-            <Flex gap="3">
+            <Flex gap="3" maxWidth={"50%"} wrap={"wrap"}>
                 {isConnected && playerList.map((player) => (
-                    <Card>{player}</Card>
+                    <Card key={player}>{player}</Card>
                 ))}
             </Flex>
 
