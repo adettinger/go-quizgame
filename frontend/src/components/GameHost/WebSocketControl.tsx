@@ -1,53 +1,33 @@
-import { Flex, Button, TextField, Text, Card } from "@radix-ui/themes";
+import { Flex, Text, Card } from "@radix-ui/themes";
 import { useEffect, useRef, useState } from "react";
 import { ChatWindow, type chatMessage } from "../ChatWindow/ChatWindow";
 import { MessageLog } from "../MessageLog/MessageLog";
-import { getRandomColor, radixColors } from "./GameUtils";
-import { messageType, type Player, type WebSocketMessage } from "./GameTypes";
+import { createTextMessage, getRandomColor, parseRawMessage, radixColors } from "./GameUtils";
+import { ConnectionStatus, messageType, type Player, type WebSocketMessage } from "./GameTypes";
+import { PlayerNameForm } from "../PlayerNameForm";
 
 export function WebSocketControl() {
-    const [playerName, setPlayerName] = useState('');
     const [serverError, setServerError] = useState('');
     const [isConnected, setIsConnected] = useState(false);
     const [playerList, setPlayerList] = useState<Player[]>([]);
     const [messages, setMessages] = useState<WebSocketMessage[]>([]);
-    const [connectionStatus, setConnectionStatus] = useState('Disconnected');
+    const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(ConnectionStatus.Disconnected);
     const socketRef = useRef<WebSocket | null>(null);
     const [chatMessages, setChatMessages] = useState<chatMessage[]>([])
 
     const availableColors = [...radixColors];
 
     const addMessage = (message: WebSocketMessage) => {
-        if (message.type != messageType.Error && serverError != '') { //redundant
-            setServerError('');
-        }
         setMessages(prev => [...prev, message]);
     };
 
-    const createTextMessage = (type: messageType, content: string): WebSocketMessage => {
-        return {
-            type: type,
-            timestamp: new Date(),
-            playerName: '',
-            content: { Text: content },
-        }
-    }
-
-    const parseRawMessage = (event): WebSocketMessage => {
-        let parsedMsg = JSON.parse(event.data)
-        return { ...parsedMsg, timestamp: new Date(parsedMsg.timestamp) }
-    };
-
-    // Create Players
     const createPlayerToAdd = (name: string): Player => {
         let color: string;
         if (availableColors.length > 0) {
             let colorIndex = Math.floor(Math.random() * availableColors.length);
             color = availableColors[colorIndex];
-            // Remove the used color to avoid duplicates
             availableColors.splice(colorIndex, 1);
         } else {
-            // Fallback if we run out of unique colors
             color = getRandomColor();
         }
         return {
@@ -57,7 +37,6 @@ export function WebSocketControl() {
     };
 
     const createPlayers = (names: string[]): Player[] => {
-        // Create a copy of colors to track used colors (to avoid duplicates if needed)
         const players = names.map(name => {
             return createPlayerToAdd(name)
         });
@@ -75,6 +54,9 @@ export function WebSocketControl() {
 
     const handleMessage = (event) => {
         let msg = parseRawMessage(event);
+        if (msg.type != messageType.Error && serverError != '') { //redundant
+            setServerError('');
+        }
         switch (msg.type) {
             case messageType.Chat:
                 if ('Text' in msg.content) {
@@ -121,25 +103,26 @@ export function WebSocketControl() {
         addMessage(msg);
     };
 
+    // socketRef.current.onmessage must be reset to use updated playerList state
     useEffect(() => {
         if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
             socketRef.current.onmessage = handleMessage;
         }
     }, [playerList])
 
-    const connectWebSocket = () => {
+    const connectWebSocket = (name: string) => {
         if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
             addMessage(createTextMessage(messageType.Admin, "Aleady connected!"));
             return;
         }
 
         try {
-            setConnectionStatus('Connecting...');
-            socketRef.current = new WebSocket(`ws://localhost:8080/liveGame/player/${playerName.trim()}`);
+            setConnectionStatus(ConnectionStatus.Connecting);
+            socketRef.current = new WebSocket(`ws://localhost:8080/liveGame/player/${name.trim()}`);
 
             socketRef.current.onopen = () => {
                 setIsConnected(true);
-                setConnectionStatus('Connected');
+                setConnectionStatus(ConnectionStatus.Connected);
                 addMessage(createTextMessage(messageType.Admin, "Connection established"));
             };
 
@@ -147,16 +130,17 @@ export function WebSocketControl() {
 
             socketRef.current.onclose = () => {
                 setIsConnected(false);
-                setConnectionStatus('Disconnected');
+                setConnectionStatus(ConnectionStatus.Disconnected);
+                setChatMessages([]);
                 addMessage(createTextMessage(messageType.Admin, "Connection closed"));
             };
 
             socketRef.current.onerror = (error) => {
-                setConnectionStatus('Error');
+                setConnectionStatus(ConnectionStatus.Error);
                 addMessage(createTextMessage(messageType.Error, `${error.type}`));
             };
         } catch (error) {
-            setConnectionStatus('Error');
+            setConnectionStatus(ConnectionStatus.Error);
             addMessage(createTextMessage(messageType.Error, `Connection error: ${error instanceof Error ? error.message : String(error)}`));
         }
     };
@@ -182,53 +166,30 @@ export function WebSocketControl() {
         <Flex className="websocket-control" align="center" justify="center" direction="column" gap="3">
             <h2>Player View</h2>
 
-            <Flex direction="row" gap="3">
-                <TextField.Root
-                    value={playerName}
-                    onChange={(event) => { setPlayerName(event.target.value) }}
-                    placeholder="Enter player name"
-                    disabled={isConnected}
-                    onKeyDown={(event) => {
-                        if (event.key === 'Enter' && playerName.trim() !== '') {
-                            connectWebSocket();
-                        }
-                    }}
-                >
-                    <TextField.Slot />
-                </TextField.Root>
-                <Button
-                    onClick={connectWebSocket}
-                    disabled={isConnected || playerName.trim() === ""}
-                    className={isConnected ? "button-disabled" : "button-connect"}
-                >
-                    Join Game
-                </Button>
-            </Flex>
+            <PlayerNameForm
+                isConnected={connectionStatus === ConnectionStatus.Connected}
+                onSubmit={(name: string) => { connectWebSocket(name) }}
+                onQuit={disconnectWebSocket}
+            />
 
             <div className="status-indicator">
-                WebSocket Status: <span className={`status-${connectionStatus.toLowerCase()}`}>{connectionStatus}</span>
+                WebSocket Status: <span>{connectionStatus}</span>
             </div>
+
             {serverError !== '' &&
                 <Text color="red">Error: {serverError}</Text>
             }
-            <Flex direction="row" gap="3">
-                <Button
-                    onClick={disconnectWebSocket}
-                    disabled={!isConnected}
-                    className={!isConnected ? "button-disabled" : "button-disconnect"}
-                >
-                    Disconnect
-                </Button>
-            </Flex>
 
-            <Flex gap="3" maxWidth={"50%"} wrap={"wrap"}>
-                {isConnected && playerList.map((player) => (
-                    <Card key={player.name} style={{ backgroundColor: player.color }}>{player.name}</Card>
-                ))}
-            </Flex>
+            {connectionStatus === ConnectionStatus.Connected &&
+                <>
+                    <Flex gap="3" maxWidth={"50%"} wrap={"wrap"}>
+                        {playerList.map((player) => (
+                            <Card key={player.name} style={{ backgroundColor: player.color }}>{player.name}</Card>
+                        ))}
+                    </Flex>
 
-            {isConnected &&
-                <ChatWindow onMessageSend={sendChatMessage} messages={chatMessages} />
+                    <ChatWindow onMessageSend={sendChatMessage} messages={chatMessages} />
+                </>
             }
 
             <MessageLog messages={messages} />

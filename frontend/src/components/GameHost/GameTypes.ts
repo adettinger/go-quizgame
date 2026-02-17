@@ -1,5 +1,3 @@
-
-
 export enum messageType {
     Admin = "admin",
     Sent = "sent",
@@ -25,6 +23,13 @@ export interface WebSocketMessage {
     timestamp: Date;
     playerName: string;
     content: MessageTextContent | MessagePlayerListContent; //Set to union of possible message content types that are defined in backend
+}
+
+export enum ConnectionStatus {
+    Disconnected = "Disconnected",
+    Connecting = "Connecting...",
+    Connected = "Connected",
+    Error = "Error,"
 }
 
 export interface Player {

@@ -1,3 +1,5 @@
+import type { messageType, WebSocketMessage } from "./GameTypes";
+
 export const radixColors: string[] = [
     'tomato',
     // 'red',
@@ -32,3 +34,16 @@ export const getRandomColor = (): string => {
     return radixColors[randomIndex];
 };
 
+export const createTextMessage = (type: messageType, content: string): WebSocketMessage => {
+    return {
+        type: type,
+        timestamp: new Date(),
+        playerName: '',
+        content: { Text: content },
+    }
+}
+
+export const parseRawMessage = (event): WebSocketMessage => {
+    let parsedMsg = JSON.parse(event.data)
+    return { ...parsedMsg, timestamp: new Date(parsedMsg.timestamp) }
+};

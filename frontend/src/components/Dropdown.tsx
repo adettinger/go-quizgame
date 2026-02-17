@@ -12,7 +12,7 @@ export function Dropdown({ title, children }: DropdownProps) {
 
     return (
         <>
-            <Flex align="center" justify="between" width="100%">
+            <Flex align="center" justify="between" width="100%" onClick={() => setIsVisible(!isVisible)}>
                 <div style={{ width: '24px' }} /> {/* Spacer to balance the layout */}
                 <Text align="center" weight="bold">{title}</Text>
                 <Button onClick={() => setIsVisible(!isVisible)} variant="outline" color="gray">
