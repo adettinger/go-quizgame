@@ -1,7 +1,10 @@
 package socket
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
+	"strings"
 	"sync"
 	"time"
 
@@ -17,6 +20,39 @@ type Client struct {
 	Manager  *Manager
 	Send     chan models.Message
 	UserData map[string]interface{} // For storing user-specific data
+}
+
+func (client Client) Logf(message string, errs ...error) {
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("[%s] %v", client.ID, message))
+	for _, err := range errs {
+		sb.WriteString(": " + err.Error())
+	}
+	log.Print(sb.String())
+}
+
+func (client *Client) ErrorAndKill(errorMsg string) {
+	errorToSend := models.Message{
+		Type:       models.MessageTypeError,
+		Timestamp:  time.Now(),
+		PlayerName: "System",
+		Content:    models.MessageTextContent{Text: errorMsg},
+	}
+	jsonMessage, err := json.Marshal(errorToSend)
+	if err != nil {
+		client.Logf("Error marshaling message: ", err)
+		close(client.Send)
+		client.Conn.Close()
+		return
+	}
+	if err := client.Conn.WriteMessage(websocket.TextMessage, jsonMessage); err != nil {
+		client.Logf("Error writing message", err)
+		close(client.Send)
+		client.Conn.Close()
+		return
+	}
+	close(client.Send)
+	client.Conn.Close()
 }
 
 // Manager manages WebSocket connections
@@ -49,7 +85,7 @@ func (m *Manager) Start() {
 				m.mutex.Lock()
 				defer m.mutex.Unlock()
 				m.Clients[client.ID] = client
-				log.Printf("Client connected: %s", client.ID)
+				client.Logf("Client connected")
 
 			}()
 			go func() {
@@ -74,7 +110,7 @@ func (m *Manager) Start() {
 					defer m.mutex.Unlock()
 					delete(m.Clients, client.ID)
 					close(client.Send)
-					log.Printf("Client disconnected: %s", client.ID)
+					client.Logf("Client disconnected: %s")
 				}()
 
 				go func() {
@@ -104,9 +140,9 @@ func (m *Manager) Start() {
 				func(id string, client *Client) {
 					select {
 					case client.Send <- message:
-						log.Printf("Message queued for client %s", id)
+						client.Logf("Message queued")
 					default:
-						log.Printf("Client %s send buffer full, closing", id)
+						client.Logf("Send buffer full, closing")
 
 						// Use a goroutine to avoid deadlock when unregistering
 						go func() {

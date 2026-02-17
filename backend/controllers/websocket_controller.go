@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/adettinger/go-quizgame/models"
@@ -42,6 +43,7 @@ func (wsc *WebSocketController) HandleConnection(c *gin.Context) {
 	log.Printf("Request query: %s", c.Request.URL.RawQuery)
 	log.Printf("Request headers: %v", c.Request.Header)
 	log.Printf("Request method: %s", c.Request.Method)
+	log.Printf("=== ===")
 
 	playerName := c.Param("playerName")
 
@@ -62,30 +64,16 @@ func (wsc *WebSocketController) HandleConnection(c *gin.Context) {
 	client.UserData["name"] = playerName
 	log.Print("New Client created")
 
+	// Validate player name
+	playerName = strings.TrimSpace(playerName)
+	if len(playerName) == 0 {
+		client.ErrorAndKill("Invalid name")
+		return
+	}
+
 	_, err = wsc.manager.LiveGameStore.AddPlayer(playerName)
 	if err != nil {
-		//TODO: handle duplicate player names
-		errorToSend := models.Message{
-			Type:       models.MessageTypeError,
-			Timestamp:  time.Now(),
-			PlayerName: "System",
-			Content:    models.MessageTextContent{Text: "Player name is already used"},
-		}
-		jsonMessage, err := json.Marshal(errorToSend)
-		if err != nil {
-			log.Printf("[%s] Error marshaling message: %v", client.ID, err)
-			close(client.Send)
-			client.Conn.Close()
-			return
-		}
-		if err := client.Conn.WriteMessage(websocket.TextMessage, jsonMessage); err != nil {
-			log.Printf("[%s] Error writing message: %v", client.ID, err)
-			close(client.Send)
-			client.Conn.Close()
-			return
-		}
-		close(client.Send)
-		client.Conn.Close()
+		client.ErrorAndKill("Player name is already used")
 		return
 	}
 
@@ -95,7 +83,7 @@ func (wsc *WebSocketController) HandleConnection(c *gin.Context) {
 	// Start goroutines for reading and writing
 	go wsc.readPump(client)
 	go wsc.writePump(client)
-	log.Print("Read/Write pumps started")
+	client.Logf("Read/Write pumps started")
 
 	welcomeMsg := models.Message{
 		Type:       models.MessageTypeChat,
@@ -116,9 +104,9 @@ func (wsc *WebSocketController) HandleConnection(c *gin.Context) {
 
 // readPump pumps messages from the WebSocket connection to the manager
 func (wsc *WebSocketController) readPump(client *socket.Client) {
-	log.Printf("[%s] Starting readPump", client.ID)
+	client.Logf("Starting readPump")
 	defer func() {
-		log.Printf("[%s] readPump exiting, unregistering client", client.ID)
+		client.Logf("readPump exiting, unregistering client")
 		wsc.manager.Unregister <- client
 		client.Conn.Close()
 	}()
@@ -126,28 +114,28 @@ func (wsc *WebSocketController) readPump(client *socket.Client) {
 	// Set read deadline
 	client.Conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 	client.Conn.SetPongHandler(func(string) error {
-		log.Printf("[%s] Received pong", client.ID)
+		client.Logf("Received pong")
 		client.Conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 		return nil
 	})
 
 	for {
-		log.Printf("[%s] Waiting for next message...", client.ID)
+		client.Logf("Waiting for next message...")
 		messageType, rawMessage, err := client.Conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("[%s] Error reading message: %v", client.ID, err)
+				client.Logf("Error reading message", err)
 			} else {
-				log.Printf("[%s] Connection closed: %v", client.ID, err)
+				client.Logf("Connection closed", err)
 			}
 			break
 		}
-		log.Printf("[%s] Received message type %d: %s", client.ID, messageType, string(rawMessage))
+		client.Logf(fmt.Sprintf("Received message type %d: %s", messageType, string(rawMessage)))
 
 		// Parse the incoming JSON message
 		var message models.Message
 		if err := json.Unmarshal(rawMessage, &message); err != nil {
-			log.Printf("[%s] Error parsing message: %v", client.ID, err)
+			client.Logf("Error parsing message", err)
 
 			// Send error message back to client
 			errorMsg := models.Message{
@@ -157,9 +145,9 @@ func (wsc *WebSocketController) readPump(client *socket.Client) {
 			}
 			select {
 			case client.Send <- errorMsg:
-				log.Printf("[%s] Sent error message", client.ID)
+				client.Logf("Sent error message")
 			default:
-				log.Printf("[%s] Client send channel full, skipping error message", client.ID)
+				client.Logf("Client send channel full, skipping error message")
 			}
 			continue
 		}
@@ -168,39 +156,28 @@ func (wsc *WebSocketController) readPump(client *socket.Client) {
 		message.PlayerName = client.UserData["name"].(string)
 		message.Timestamp = time.Now()
 
-		log.Printf("[%s] Processing message of type %s", client.ID, message.Type)
+		client.Logf(fmt.Sprintf("Processing message of type %s", message.Type))
 
 		// Process the message based on its type
 		switch message.Type {
 		case models.MessageTypeChat:
-			// ****TODO: Validate type
-			// log.Printf("Received message content, %v", message.Content)
-			// _, ok := message.Content.(models.MessageTextContent)
-			// if !ok {
-			// 	log.Printf("[%s] Unknown message type: %s", client.ID, message.Type)
-			// 	client.Send <- models.Message{
-			// 		Type:      models.MessageTypeError,
-			// 		Timestamp: time.Now(),
-			// 		Content:   models.MessageTextContent{Text: "Invalid message format"},
-			// 	}
-			// }
-			log.Printf("[%s] Broadcasting chat message", client.ID)
+			client.Logf("Broadcasting chat message")
 			wsc.manager.BroadcastMessage(message)
 		case models.MessageTypeGameUpdate:
-			log.Printf("[%s] Broadcasting game update", client.ID)
+			client.Logf("Broadcasting game update")
 			wsc.manager.BroadcastMessage(message)
 		default:
-			log.Printf("[%s] Unknown message type: %s", client.ID, message.Type)
+			client.Logf(fmt.Sprintf("Unknown message type: %s", message.Type))
 		}
 	}
 }
 
 // writePump pumps messages from the manager to the WebSocket connection
 func (wsc *WebSocketController) writePump(client *socket.Client) {
-	log.Printf("[%s] Starting writePump", client.ID)
+	client.Logf("Starting writePump")
 	ticker := time.NewTicker(30 * time.Second)
 	defer func() {
-		log.Printf("[%s] writePump exiting", client.ID)
+		client.Logf("writePump exiting")
 		ticker.Stop()
 		client.Conn.Close()
 	}()
@@ -208,35 +185,35 @@ func (wsc *WebSocketController) writePump(client *socket.Client) {
 	for {
 		select {
 		case message, ok := <-client.Send:
-			log.Printf("[%s] Got message to send, channel ok: %v", client.ID, ok)
+			client.Logf(fmt.Sprintf("Got message to send, channel ok: %v", ok))
 
 			client.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 			if !ok {
 				// The manager closed the channel.
-				log.Printf("[%s] Send channel closed, sending close message", client.ID)
+				client.Logf("Send channel closed, sending close message")
 				client.Conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
 
-			log.Printf("[%s] Marshaling message of type %s", client.ID, message.Type)
+			client.Logf(fmt.Sprintf("Marshaling message of type %s", message.Type))
 			jsonMessage, err := json.Marshal(message)
 			if err != nil {
-				log.Printf("[%s] Error marshaling message: %v", client.ID, err)
+				client.Logf("Error marshaling message", err)
 				continue
 			}
 
-			log.Printf("[%s] Writing message: %s", client.ID, string(jsonMessage))
+			client.Logf(fmt.Sprintf("Writing message: %s", string(jsonMessage)))
 			if err := client.Conn.WriteMessage(websocket.TextMessage, jsonMessage); err != nil {
-				log.Printf("[%s] Error writing message: %v", client.ID, err)
+				client.Logf("Error writing message", err)
 				return
 			}
-			log.Printf("[%s] Message written successfully", client.ID)
+			client.Logf("Message written successfully")
 
 		case <-ticker.C:
-			log.Printf("[%s] Sending ping", client.ID)
+			client.Logf("Sending ping")
 			client.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 			if err := client.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-				log.Printf("[%s] Error sending ping: %v", client.ID, err)
+				client.Logf("Error sending ping: %v", err)
 				return
 			}
 		}
