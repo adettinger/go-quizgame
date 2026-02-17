@@ -22,11 +22,18 @@ type Client struct {
 	UserData map[string]interface{} // For storing user-specific data
 }
 
-func (client Client) Logf(message string, errs ...error) {
+func (client Client) Logf(message string, args ...interface{}) {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("[%s] %v", client.ID, message))
-	for _, err := range errs {
-		sb.WriteString(": " + err.Error())
+	for _, arg := range args {
+		switch v := arg.(type) {
+		case error:
+			sb.WriteString(": " + v.Error())
+		case fmt.Stringer:
+			sb.WriteString(v.String())
+		default:
+			sb.WriteString(fmt.Sprintf("%v", v))
+		}
 	}
 	log.Print(sb.String())
 }

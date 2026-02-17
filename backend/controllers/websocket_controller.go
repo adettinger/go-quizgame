@@ -130,7 +130,7 @@ func (wsc *WebSocketController) readPump(client *socket.Client) {
 			}
 			break
 		}
-		client.Logf(fmt.Sprintf("Received message type %d: %s", messageType, string(rawMessage)))
+		client.Logf("Received message type: ", messageType, ": ", string(rawMessage))
 
 		// Parse the incoming JSON message
 		var message models.Message
@@ -156,7 +156,7 @@ func (wsc *WebSocketController) readPump(client *socket.Client) {
 		message.PlayerName = client.UserData["name"].(string)
 		message.Timestamp = time.Now()
 
-		client.Logf(fmt.Sprintf("Processing message of type %s", message.Type))
+		client.Logf("Processing message of type: ", message.Type)
 
 		// Process the message based on its type
 		switch message.Type {
@@ -167,7 +167,7 @@ func (wsc *WebSocketController) readPump(client *socket.Client) {
 			client.Logf("Broadcasting game update")
 			wsc.manager.BroadcastMessage(message)
 		default:
-			client.Logf(fmt.Sprintf("Unknown message type: %s", message.Type))
+			client.Logf("Unknown message type: ", message.Type)
 		}
 	}
 }
@@ -185,7 +185,7 @@ func (wsc *WebSocketController) writePump(client *socket.Client) {
 	for {
 		select {
 		case message, ok := <-client.Send:
-			client.Logf(fmt.Sprintf("Got message to send, channel ok: %v", ok))
+			client.Logf("Got message to send, channel ok: ", ok)
 
 			client.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 			if !ok {
@@ -195,14 +195,14 @@ func (wsc *WebSocketController) writePump(client *socket.Client) {
 				return
 			}
 
-			client.Logf(fmt.Sprintf("Marshaling message of type %s", message.Type))
+			client.Logf("Marshaling message of type: ", message.Type)
 			jsonMessage, err := json.Marshal(message)
 			if err != nil {
 				client.Logf("Error marshaling message", err)
 				continue
 			}
 
-			client.Logf(fmt.Sprintf("Writing message: %s", string(jsonMessage)))
+			client.Logf("Writing message: ", string(jsonMessage))
 			if err := client.Conn.WriteMessage(websocket.TextMessage, jsonMessage); err != nil {
 				client.Logf("Error writing message", err)
 				return
