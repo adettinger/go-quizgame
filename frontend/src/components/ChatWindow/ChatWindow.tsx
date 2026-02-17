@@ -4,6 +4,7 @@ import './ChatWindow.scss';
 
 export interface chatMessage {
     playerName: string;
+    color: string;
     message: string;
     timestamp: Date;
 }
@@ -33,7 +34,7 @@ export function ChatWindow(props: chatWindowProps) {
                                 {
                                     props.messages.map((msg) => (
                                         <Flex direction="row" gap="1" align={"center"}>
-                                            <Text className="playerName" color="red">{msg.playerName}</Text>
+                                            <Text className="playerName" color={msg.color || "gray" as any}>{msg.playerName}</Text>
                                             <Text className="message">{msg.message}</Text>
                                             <Text className="time" color="gray" size="1">{msg.timestamp.toLocaleTimeString()}</Text>
                                         </Flex>

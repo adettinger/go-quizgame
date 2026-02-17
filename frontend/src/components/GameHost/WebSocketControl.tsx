@@ -2,6 +2,7 @@ import { Flex, Button, TextField, Text, Card } from "@radix-ui/themes";
 import { useEffect, useRef, useState } from "react";
 import { ChatWindow, type chatMessage } from "../ChatWindow/ChatWindow";
 import { MessageLog } from "./MessageLog";
+import { getRandomColor, radixColors } from "./GameUtils";
 
 enum messageType {
     Admin = "admin",
@@ -30,16 +31,24 @@ export interface WebSocketMessage {
     content: MessageTextContent | MessagePlayerListContent; //Set to union of possible message content types that are defined in backend
 }
 
+export interface Player {
+    name: string;
+    color: string;
+}
+
+
 
 export function WebSocketControl() {
     const [playerName, setPlayerName] = useState('');
     const [serverError, setServerError] = useState('');
     const [isConnected, setIsConnected] = useState(false);
-    const [playerList, setPlayerList] = useState<string[]>([]);
+    const [playerList, setPlayerList] = useState<Player[]>([]);
     const [messages, setMessages] = useState<WebSocketMessage[]>([]);
     const [connectionStatus, setConnectionStatus] = useState('Disconnected');
     const socketRef = useRef<WebSocket | null>(null);
     const [chatMessages, setChatMessages] = useState<chatMessage[]>([])
+
+    const availableColors = [...radixColors];
 
     const addMessage = (message: WebSocketMessage) => {
         if (message.type != messageType.Error && serverError != '') { //redundant
@@ -62,6 +71,32 @@ export function WebSocketControl() {
         return { ...parsedMsg, timestamp: new Date(parsedMsg.timestamp) }
     };
 
+    // Create Players
+    const createPlayerToAdd = (name: string): Player => {
+        let color: string;
+        if (availableColors.length > 0) {
+            let colorIndex = Math.floor(Math.random() * availableColors.length);
+            color = availableColors[colorIndex];
+            // Remove the used color to avoid duplicates
+            availableColors.splice(colorIndex, 1);
+        } else {
+            // Fallback if we run out of unique colors
+            color = getRandomColor();
+        }
+        return {
+            name,
+            color
+        }
+    };
+
+    const createPlayers = (names: string[]): Player[] => {
+        // Create a copy of colors to track used colors (to avoid duplicates if needed)
+        const players = names.map(name => {
+            return createPlayerToAdd(name)
+        });
+        return players;
+    };
+
     // Clean up the WebSocket connection when component unmounts
     useEffect(() => {
         return () => {
@@ -70,6 +105,61 @@ export function WebSocketControl() {
             }
         };
     }, []);
+
+    const handleMessage = (event) => {
+        let msg = parseRawMessage(event);
+        switch (msg.type) {
+            case messageType.Chat:
+                if ('Text' in msg.content) {
+                    let msgToAdd = msg.content.Text;
+                    console.log(playerList);
+                    setChatMessages(prev => [...prev, {
+                        playerName: msg.playerName,
+                        color: playerList.find(player => player.name === msg.playerName)?.color || "gray",
+                        message: msgToAdd,
+                        timestamp: msg.timestamp,
+                    }]);
+                }
+                break;
+            case messageType.Join:
+                setPlayerList(prev => {
+                    if (prev.some(player => player.name === msg.playerName)) {
+                        return prev;
+                    }
+                    return [...prev, createPlayerToAdd(msg.playerName)]
+                });
+                if ('Text' in msg.content) {
+                    let msgToAdd = `${msg.playerName} ${msg.content.Text}`
+                    setChatMessages(prev => [...prev, { playerName: "System", color: "red", message: msgToAdd, timestamp: msg.timestamp }]);
+                }
+                break;
+            case messageType.Leave:
+                setPlayerList(prev => prev.filter(player => player.name !== msg.playerName));
+                if ('Text' in msg.content) {
+                    let msgToAdd = `${msg.playerName} ${msg.content.Text}`
+                    setChatMessages(prev => [...prev, { playerName: "System", color: "red", message: msgToAdd, timestamp: msg.timestamp }]);
+                }
+                break;
+            case messageType.PlayerList:
+                if ('Names' in msg.content) {
+                    // create player with random color
+                    setPlayerList(createPlayers(msg.content?.Names));
+                }
+                break;
+            case messageType.Error:
+                if ('Text' in msg.content) {
+                    setServerError(msg.content.Text);
+                }
+                break;
+        }
+        addMessage(msg);
+    };
+
+    useEffect(() => {
+        if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+            socketRef.current.onmessage = handleMessage;
+        }
+    }, [playerList])
 
     const connectWebSocket = () => {
         if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
@@ -87,47 +177,7 @@ export function WebSocketControl() {
                 addMessage(createTextMessage(messageType.Admin, "Connection established"));
             };
 
-            socketRef.current.onmessage = (event) => {
-                let msg = parseRawMessage(event);
-                switch (msg.type) {
-                    case messageType.Chat:
-                        if ('Text' in msg.content) {
-                            let msgToAdd = msg.content.Text;
-                            setChatMessages(prev => [...prev, { playerName: msg.playerName, message: msgToAdd, timestamp: msg.timestamp }]);
-                        }
-                        break;
-                    case messageType.Join:
-                        setPlayerList(prev => {
-                            if (prev.includes(msg.playerName)) {
-                                return prev;
-                            }
-                            return [...prev, msg.playerName]
-                        });
-                        if ('Text' in msg.content) {
-                            let msgToAdd = `${msg.playerName} ${msg.content.Text}`
-                            setChatMessages(prev => [...prev, { playerName: "System", message: msgToAdd, timestamp: msg.timestamp }]);
-                        }
-                        break;
-                    case messageType.Leave:
-                        setPlayerList(prev => prev.filter(name => name !== msg.playerName));
-                        if ('Text' in msg.content) {
-                            let msgToAdd = `${msg.playerName} ${msg.content.Text}`
-                            setChatMessages(prev => [...prev, { playerName: "System", message: msgToAdd, timestamp: msg.timestamp }]);
-                        }
-                        break;
-                    case messageType.PlayerList:
-                        if ('Names' in msg.content) {
-                            setPlayerList(msg.content?.Names);
-                        }
-                        break;
-                    case messageType.Error:
-                        if ('Text' in msg.content) {
-                            setServerError(msg.content.Text);
-                        }
-                        break;
-                }
-                addMessage(msg);
-            };
+            socketRef.current.onmessage = handleMessage;
 
             socketRef.current.onclose = () => {
                 setIsConnected(false);
@@ -207,7 +257,7 @@ export function WebSocketControl() {
 
             <Flex gap="3" maxWidth={"50%"} wrap={"wrap"}>
                 {isConnected && playerList.map((player) => (
-                    <Card key={player}>{player}</Card>
+                    <Card key={player.name} style={{ backgroundColor: player.color }}>{player.name}</Card>
                 ))}
             </Flex>
 
