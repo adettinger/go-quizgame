@@ -2,7 +2,7 @@ import type { messageType, WebSocketMessage } from "./GameTypes";
 
 export const radixColors: string[] = [
     'tomato',
-    // 'red',
+    // 'red', For system
     'crimson',
     'pink',
     'plum',
@@ -16,12 +16,12 @@ export const radixColors: string[] = [
     'grass',
     'lime',
     'yellow',
-    // 'amber',
+    // 'amber', not visible enough
     'orange',
-    'brown',
+    // 'brown', not visible enough
     'gold',
     'bronze',
-    // 'gray',
+    // 'gray', not clear enough
     'mauve',
     'slate',
     'sage',
@@ -43,7 +43,7 @@ export const createTextMessage = (type: messageType, content: string): WebSocket
     }
 }
 
-export const parseRawMessage = (event): WebSocketMessage => {
+export const parseRawMessage = (event: any): WebSocketMessage => {
     let parsedMsg = JSON.parse(event.data)
     return { ...parsedMsg, timestamp: new Date(parsedMsg.timestamp) }
 };

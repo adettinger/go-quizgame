@@ -7,12 +7,15 @@ import { ConnectionStatus, messageType, type Player, type WebSocketMessage } fro
 import { PlayerNameForm } from "../PlayerNameForm";
 
 export function GameControl() {
-    const [serverError, setServerError] = useState('');
     const [playerList, setPlayerList] = useState<Player[]>([]);
     const [messages, setMessages] = useState<WebSocketMessage[]>([]);
-    const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(ConnectionStatus.Disconnected); //For display purposes only!
-    const socketRef = useRef<WebSocket | null>(null);
     const [chatMessages, setChatMessages] = useState<chatMessage[]>([])
+
+    const socketRef = useRef<WebSocket | null>(null);
+
+    // For display only!!!
+    const [serverError, setServerError] = useState('');
+    const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(ConnectionStatus.Disconnected);
 
     const availableColors = [...radixColors];
 
@@ -55,7 +58,7 @@ export function GameControl() {
         };
     }, []);
 
-    const handleMessage = (event) => {
+    const handleMessage = (event: any) => {
         let msg = parseRawMessage(event);
         if (msg.type != messageType.Error && serverError != '') {
             setServerError('');
@@ -133,6 +136,7 @@ export function GameControl() {
             socketRef.current.onclose = () => {
                 setConnectionStatus(ConnectionStatus.Disconnected);
                 setChatMessages([]);
+                setPlayerList([]); //Not necessary because will be overwritten if rejoin, but render looks cleaner
                 addMessage(createTextMessage(messageType.Admin, "Connection closed"));
             };
 
