@@ -6,12 +6,11 @@ import { createTextMessage, getRandomColor, parseRawMessage, radixColors } from 
 import { ConnectionStatus, messageType, type Player, type WebSocketMessage } from "./GameTypes";
 import { PlayerNameForm } from "../PlayerNameForm";
 
-export function WebSocketControl() {
+export function GameControl() {
     const [serverError, setServerError] = useState('');
-    const [isConnected, setIsConnected] = useState(false);
     const [playerList, setPlayerList] = useState<Player[]>([]);
     const [messages, setMessages] = useState<WebSocketMessage[]>([]);
-    const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(ConnectionStatus.Disconnected);
+    const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(ConnectionStatus.Disconnected); //For display purposes only!
     const socketRef = useRef<WebSocket | null>(null);
     const [chatMessages, setChatMessages] = useState<chatMessage[]>([])
 
@@ -43,6 +42,10 @@ export function WebSocketControl() {
         return players;
     };
 
+    const isSocketConnected = (): boolean => {
+        return !!socketRef.current && socketRef.current.readyState === WebSocket.OPEN
+    };
+
     // Clean up the WebSocket connection when component unmounts
     useEffect(() => {
         return () => {
@@ -54,7 +57,7 @@ export function WebSocketControl() {
 
     const handleMessage = (event) => {
         let msg = parseRawMessage(event);
-        if (msg.type != messageType.Error && serverError != '') { //redundant
+        if (msg.type != messageType.Error && serverError != '') {
             setServerError('');
         }
         switch (msg.type) {
@@ -111,7 +114,7 @@ export function WebSocketControl() {
     }, [playerList])
 
     const connectWebSocket = (name: string) => {
-        if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+        if (isSocketConnected()) {
             addMessage(createTextMessage(messageType.Admin, "Aleady connected!"));
             return;
         }
@@ -121,7 +124,6 @@ export function WebSocketControl() {
             socketRef.current = new WebSocket(`ws://localhost:8080/liveGame/player/${name.trim()}`);
 
             socketRef.current.onopen = () => {
-                setIsConnected(true);
                 setConnectionStatus(ConnectionStatus.Connected);
                 addMessage(createTextMessage(messageType.Admin, "Connection established"));
             };
@@ -129,7 +131,6 @@ export function WebSocketControl() {
             socketRef.current.onmessage = handleMessage;
 
             socketRef.current.onclose = () => {
-                setIsConnected(false);
                 setConnectionStatus(ConnectionStatus.Disconnected);
                 setChatMessages([]);
                 addMessage(createTextMessage(messageType.Admin, "Connection closed"));
@@ -163,11 +164,11 @@ export function WebSocketControl() {
     };
 
     return (
-        <Flex className="websocket-control" align="center" justify="center" direction="column" gap="3">
+        <Flex align="center" justify="center" direction="column" gap="3">
             <h2>Player View</h2>
 
             <PlayerNameForm
-                isConnected={connectionStatus === ConnectionStatus.Connected}
+                isConnected={isSocketConnected()}
                 onSubmit={(name: string) => { connectWebSocket(name) }}
                 onQuit={disconnectWebSocket}
             />
@@ -180,7 +181,7 @@ export function WebSocketControl() {
                 <Text color="red">Error: {serverError}</Text>
             }
 
-            {connectionStatus === ConnectionStatus.Connected &&
+            {isSocketConnected() &&
                 <>
                     <Flex gap="3" maxWidth={"50%"} wrap={"wrap"}>
                         {playerList.map((player) => (

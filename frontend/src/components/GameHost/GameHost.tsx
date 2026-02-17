@@ -1,8 +1,8 @@
-import { WebSocketControl } from "./WebSocketControl";
+import { GameControl } from "./GameControl";
 
 
 export function GameHost() {
   return (
-    <WebSocketControl />
+    <GameControl />
   );
 };
