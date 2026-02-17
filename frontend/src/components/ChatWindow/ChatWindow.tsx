@@ -26,14 +26,14 @@ export function ChatWindow(props: chatWindowProps) {
         <Card className="fullCard">
             <Flex direction="column" gap="3">
                 <Card className="messagesCard">
-                    <ScrollArea>
+                    <ScrollArea type="auto" scrollbars="both" style={{ height: 180 }}>
                         {props.messages.length == 0 ?
                             <Text color="red">No messages</Text>
                             :
                             <Flex direction="column" gap="1">
                                 {
-                                    props.messages.map((msg) => (
-                                        <Flex direction="row" gap="1" align={"center"}>
+                                    props.messages.map((msg, index) => (
+                                        <Flex direction="row" gap="1" align={"center"} key={index}>
                                             <Text className="playerName" color={msg.color || "gray" as any}>{msg.playerName}</Text>
                                             <Text className="message">{msg.message}</Text>
                                             <Text className="time" color="gray" size="1">{msg.timestamp.toLocaleTimeString()}</Text>

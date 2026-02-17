@@ -2,6 +2,16 @@
     max-width: 600px;
 }
 
+.messages {
+    width: 100%;
+    max-height: 350px;
+}
+
 .messagesCard {
     background-color: #e2e2e2;
+}
+
+.time {
+    white-space: "noWrap";
+    flex-shrink: 0;
 }

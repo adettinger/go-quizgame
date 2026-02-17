@@ -1,0 +1,17 @@
+.messageLog {
+    min-width: 590px;
+    max-width: 80%;
+}
+
+
+.content {
+    word-break: break-all;
+}
+
+.Table.Cell:not(.content) {
+    white-space: 'noWrap'
+}
+
+.Table.ColumnHeaderCell {
+    white-space: "noWrap";
+}

@@ -1,42 +1,9 @@
 import { Flex, Button, TextField, Text, Card } from "@radix-ui/themes";
 import { useEffect, useRef, useState } from "react";
 import { ChatWindow, type chatMessage } from "../ChatWindow/ChatWindow";
-import { MessageLog } from "./MessageLog";
+import { MessageLog } from "../MessageLog/MessageLog";
 import { getRandomColor, radixColors } from "./GameUtils";
-
-enum messageType {
-    Admin = "admin",
-    Sent = "sent",
-    Chat = "chat",
-    Join = "join",
-    Leave = "leave",
-    GameUpdate = "game_update",
-    Error = "error",
-    PlayerList = "player_list"
-}
-
-interface MessageTextContent {
-    Text: string;
-}
-
-interface MessagePlayerListContent {
-    Names: string[];
-}
-
-
-export interface WebSocketMessage {
-    type: messageType;
-    timestamp: Date;
-    playerName: string;
-    content: MessageTextContent | MessagePlayerListContent; //Set to union of possible message content types that are defined in backend
-}
-
-export interface Player {
-    name: string;
-    color: string;
-}
-
-
+import { messageType, type Player, type WebSocketMessage } from "./GameTypes";
 
 export function WebSocketControl() {
     const [playerName, setPlayerName] = useState('');
@@ -112,10 +79,9 @@ export function WebSocketControl() {
             case messageType.Chat:
                 if ('Text' in msg.content) {
                     let msgToAdd = msg.content.Text;
-                    console.log(playerList);
                     setChatMessages(prev => [...prev, {
                         playerName: msg.playerName,
-                        color: playerList.find(player => player.name === msg.playerName)?.color || "gray",
+                        color: msg.playerName === "System" ? "red" : playerList.find(player => player.name === msg.playerName)?.color || "gray",
                         message: msgToAdd,
                         timestamp: msg.timestamp,
                     }]);
