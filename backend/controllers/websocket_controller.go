@@ -5,15 +5,17 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/adettinger/go-quizgame/models"
 	"github.com/adettinger/go-quizgame/socket"
+	"github.com/adettinger/go-quizgame/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
+
+const PlayerNameMaxLength = 20
 
 // WebSocketController handles WebSocket connections
 type WebSocketController struct {
@@ -65,8 +67,7 @@ func (wsc *WebSocketController) HandleConnection(c *gin.Context) {
 	log.Print("New Client created")
 
 	// Validate player name
-	playerName = strings.TrimSpace(playerName)
-	if len(playerName) == 0 {
+	if !utils.IsPlayerNameValid(playerName, PlayerNameMaxLength) {
 		client.ErrorAndKill("Invalid name")
 		return
 	}
