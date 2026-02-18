@@ -1,9 +1,9 @@
 import type { messageType, WebSocketMessage } from "./GameTypes";
 
 export const playerColors: string[] = [
-    'tomato',
+    // 'tomato', too close to red
     // 'red', For system
-    'crimson',
+    // 'crimson', too close to red
     'pink',
     'plum',
     'purple',

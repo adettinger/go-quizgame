@@ -6,6 +6,7 @@ import { createTextMessage, getRandomColor, parseRawMessage, playerColors } from
 import { ConnectionStatus, messageType, type Player, type WebSocketMessage } from "../GameHost/GameTypes";
 import { PlayerNameForm } from "../PlayerNameForm";
 import './GameControl.scss'
+import { PlayerBadgeList } from "../PlayerBadgeList";
 
 export function GameControl() {
     const [playerList, setPlayerList] = useState<Player[]>([]);
@@ -97,7 +98,6 @@ export function GameControl() {
                 break;
             case messageType.PlayerList:
                 if ('Names' in msg.content) {
-                    // create player with random color
                     setPlayerList(createPlayers(msg.content?.Names));
                 }
                 break;
@@ -164,7 +164,7 @@ export function GameControl() {
         if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
             socketRef.current.send(JSON.stringify(createTextMessage(messageType.Chat, message)));
         } else {
-            addMessage(createTextMessage(messageType.Error, "Cannot send message: No connection"));
+            addMessage(createTextMessage(messageType.Error, `Cannot send message: Connection not open. Connection status: ${connectionStatus}`));
         }
     };
 
@@ -188,12 +188,7 @@ export function GameControl() {
 
             {isSocketConnected() &&
                 <>
-                    <Flex gap="3" maxWidth={"50%"} wrap={"wrap"}>
-                        {playerList.map((player) => (
-                            <Badge key={player.name} color={player.color || "gray" as any} size="3">{player.name}</Badge>
-                        ))}
-                    </Flex>
-
+                    <PlayerBadgeList players={playerList} />
                     <ChatWindow onMessageSend={sendChatMessage} messages={chatMessages} />
                 </>
             }
