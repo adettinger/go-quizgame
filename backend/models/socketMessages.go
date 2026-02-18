@@ -33,3 +33,12 @@ type Message struct {
 type PlayerListContent struct {
 	PlayerList []string
 }
+
+func CreateMessage(Type MessageType, PlayerName string, Content interface{}) Message {
+	return Message {
+		Type: Type,
+		Timestamp: time.Now(),
+		PlayerName: PlayerName,
+		Content: Content,
+	}
+}

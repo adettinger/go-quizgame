@@ -1,6 +1,6 @@
 import type { messageType, WebSocketMessage } from "./GameTypes";
 
-export const radixColors: string[] = [
+export const playerColors: string[] = [
     'tomato',
     // 'red', For system
     'crimson',
@@ -16,22 +16,22 @@ export const radixColors: string[] = [
     'grass',
     'lime',
     'yellow',
-    // 'amber', not visible enough
+    // 'amber', too close to yellow
     'orange',
-    // 'brown', not visible enough
+    'brown',
     'gold',
-    'bronze',
+    // 'bronze', to close to brown
     // 'gray', not clear enough
-    'mauve',
-    'slate',
-    'sage',
-    'olive',
-    'sand',
+    // 'mauve', not set for badge
+    // 'slate', not set for badge
+    // 'sage', not set for badge
+    // 'olive', not set for badge
+    // 'sand', not set for badge
 ];
 
 export const getRandomColor = (): string => {
-    const randomIndex = Math.floor(Math.random() * radixColors.length);
-    return radixColors[randomIndex];
+    const randomIndex = Math.floor(Math.random() * playerColors.length);
+    return playerColors[randomIndex];
 };
 
 export const createTextMessage = (type: messageType, content: string): WebSocketMessage => {

@@ -85,21 +85,19 @@ func (wsc *WebSocketController) HandleConnection(c *gin.Context) {
 	go wsc.writePump(client)
 	client.Logf("Read/Write pumps started")
 
-	welcomeMsg := models.Message{
-		Type:       models.MessageTypeChat,
-		Timestamp:  time.Now(),
-		PlayerName: "System",
-		Content:    models.MessageTextContent{Text: fmt.Sprintf("Welcome, %s!", playerName)},
-	}
-	client.Send <- welcomeMsg
+	// Send welcome message to new client
+	client.Send <- models.CreateMessage(
+		models.MessageTypeChat,
+		"System",
+		models.MessageTextContent{Text: fmt.Sprintf("Welcome, %s!", playerName)},
+	)
 
-	existingPlayers := models.Message{
-		Type:       models.MessageTypePlayerList,
-		Timestamp:  time.Now(),
-		PlayerName: "System",
-		Content:    models.PlayerListMessageContent{Names: wsc.manager.LiveGameStore.GetPlayerNameList()},
-	}
-	client.Send <- existingPlayers
+	// Send list of players to new client
+	client.Send <- models.CreateMessage(
+		models.MessageTypePlayerList,
+		"System",
+		models.PlayerListMessageContent{Names: wsc.manager.LiveGameStore.GetPlayerNameList()},
+	)
 }
 
 // readPump pumps messages from the WebSocket connection to the manager
@@ -132,12 +130,10 @@ func (wsc *WebSocketController) readPump(client *socket.Client) {
 		}
 		client.Logf("Received message type: ", messageType, ": ", string(rawMessage))
 
-		// Parse the incoming JSON message
 		var message models.Message
 		if err := json.Unmarshal(rawMessage, &message); err != nil {
 			client.Logf("Error parsing message", err)
 
-			// Send error message back to client
 			errorMsg := models.Message{
 				Type:      models.MessageTypeError,
 				Timestamp: time.Now(),
@@ -152,13 +148,11 @@ func (wsc *WebSocketController) readPump(client *socket.Client) {
 			continue
 		}
 
-		// Add sender information to the message
 		message.PlayerName = client.UserData["name"].(string)
 		message.Timestamp = time.Now()
 
 		client.Logf("Processing message of type: ", message.Type)
 
-		// Process the message based on its type
 		switch message.Type {
 		case models.MessageTypeChat:
 			client.Logf("Broadcasting chat message")
@@ -220,7 +214,6 @@ func (wsc *WebSocketController) writePump(client *socket.Client) {
 	}
 }
 
-// GetManager returns the WebSocket manager
 func (wsc *WebSocketController) GetManager() *socket.Manager {
 	return wsc.manager
 }

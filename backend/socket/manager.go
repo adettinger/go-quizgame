@@ -97,21 +97,18 @@ func (m *Manager) Start() {
 			}()
 			go func() {
 				log.Printf("Broadcasting join message for %s", client.UserData["name"].(string))
-				m.BroadcastMessage(models.Message{
-					Type:       models.MessageTypeJoin,
-					Timestamp:  time.Now(),
-					PlayerName: client.UserData["name"].(string),
-					Content:    models.MessageTextContent{Text: "has joined the game"},
-				})
+				m.BroadcastMessage(models.CreateMessage(
+					models.MessageTypeJoin,
+					client.UserData["name"].(string),
+					models.MessageTextContent{Text: "has joined the game"},
+				))
 			}()
 		case client := <-m.Unregister:
 			if _, ok := m.Clients[client.ID]; ok {
-				leaveMsg := models.Message{
-					Type:       models.MessageTypeLeave,
-					Timestamp:  time.Now(),
-					PlayerName: client.UserData["name"].(string),
-					Content:    models.MessageTextContent{Text: "has left the game"},
-				}
+				leaveMsg := models.CreateMessage(
+					models.MessageTypeLeave, 
+					client.UserData["name"].(string), 
+					models.MessageTextContent{Text: "has left the game"})
 				func() {
 					m.mutex.Lock()
 					defer m.mutex.Unlock()

@@ -1,10 +1,11 @@
-import { Flex, Text, Card } from "@radix-ui/themes";
+import { Flex, Text, Card, ScrollArea, Badge } from "@radix-ui/themes";
 import { useEffect, useRef, useState } from "react";
 import { ChatWindow, type chatMessage } from "../ChatWindow/ChatWindow";
 import { MessageLog } from "../MessageLog/MessageLog";
-import { createTextMessage, getRandomColor, parseRawMessage, radixColors } from "./GameUtils";
-import { ConnectionStatus, messageType, type Player, type WebSocketMessage } from "./GameTypes";
+import { createTextMessage, getRandomColor, parseRawMessage, playerColors } from "../GameHost/GameUtils";
+import { ConnectionStatus, messageType, type Player, type WebSocketMessage } from "../GameHost/GameTypes";
 import { PlayerNameForm } from "../PlayerNameForm";
+import './GameControl.scss'
 
 export function GameControl() {
     const [playerList, setPlayerList] = useState<Player[]>([]);
@@ -17,7 +18,7 @@ export function GameControl() {
     const [serverError, setServerError] = useState('');
     const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(ConnectionStatus.Disconnected);
 
-    const availableColors = [...radixColors];
+    const availableColors = [...playerColors];
 
     const addMessage = (message: WebSocketMessage) => {
         setMessages(prev => [...prev, message]);
@@ -189,7 +190,7 @@ export function GameControl() {
                 <>
                     <Flex gap="3" maxWidth={"50%"} wrap={"wrap"}>
                         {playerList.map((player) => (
-                            <Card key={player.name} style={{ backgroundColor: player.color }}>{player.name}</Card>
+                            <Badge key={player.name} color={player.color || "gray" as any} size="3">{player.name}</Badge>
                         ))}
                     </Flex>
 
