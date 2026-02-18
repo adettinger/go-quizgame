@@ -1,4 +1,5 @@
-import { Button, Flex, TextField } from "@radix-ui/themes";
+import { DotFilledIcon } from "@radix-ui/react-icons";
+import { Button, Flex, Text, TextField, Tooltip } from "@radix-ui/themes";
 import { useState } from "react";
 
 
@@ -11,11 +12,18 @@ export interface PlayerNameFormProps {
 export function PlayerNameForm({ isConnected, onSubmit, onQuit }: PlayerNameFormProps) {
     const [playerName, setPlayerName] = useState('');
 
+    const isNameValid = (name: string) => {
+        if (playerName.trim() === "" || playerName.trim() !== name || name.replace(/[^a-zA-Z0-9\s]/g, '') !== name) {
+            return false;
+        }
+        return true;
+    };
+
     return (
         <Flex direction="row" gap="3">
             <TextField.Root
                 value={playerName}
-                onChange={(event) => { setPlayerName(event.target.value) }}
+                onChange={(event) => { setPlayerName(event.target.value.replace(/[^a-zA-Z0-9\s]/g, '')) }}
                 placeholder="Enter player name"
                 disabled={isConnected}
                 onKeyDown={(event) => {
@@ -33,12 +41,27 @@ export function PlayerNameForm({ isConnected, onSubmit, onQuit }: PlayerNameForm
                     Quit Game
                 </Button>
                 :
-                <Button
-                    onClick={() => onSubmit(playerName)}
-                    disabled={playerName.trim() === ""}
-                >
-                    Join Game
-                </Button>
+                <Tooltip content={
+                    isNameValid(playerName)
+                        ? "Click to join the game"
+                        :
+                        <Flex direction="column">
+                            <Text>
+                                Player name must contain only letters, numbers, and spaces, and cannot be empty
+                            </Text>
+                            <Text>
+                                Cannot begin or end with space
+                            </Text>
+                        </Flex>
+                }>
+                    <Button
+                        onClick={() => onSubmit(playerName)}
+                        disabled={!isNameValid(playerName)}
+                    >
+                        Join Game
+                    </Button>
+                </Tooltip>
+
             }
         </Flex>
 
