@@ -22,21 +22,18 @@ func NewLiveGameStore() *LiveGameStore {
 	return &LiveGameStore{}
 }
 
-func (lgs *LiveGameStore) AddPlayer(name string, id uuid.UUID) error {
+func (lgs *LiveGameStore) AddPlayer(name string) (uuid.UUID, error) {
 	if lgs.PlayerExistsByName(name) {
-		return errors.New("Player with name already exists")
-	}
-	if lgs.PlayerExistsById(id) {
-		return errors.New("Player with id already exists")
+		return uuid.Nil, errors.New("Player with name already exists")
 	}
 	newPlayer := LivePlayer{
-		Id:   id,
+		Id:   lgs.CreatePlayerId(),
 		Name: name,
 	}
 	lgs.mutex.Lock()
 	defer lgs.mutex.Unlock()
 	lgs.Players = append(lgs.Players, newPlayer)
-	return nil
+	return newPlayer.Id, nil
 }
 
 func (lgs *LiveGameStore) RemovePlayerByName(name string) error {
@@ -95,4 +92,13 @@ func (lgs *LiveGameStore) GetPlayerById(id uuid.UUID) (LivePlayer, error) {
 func (lgs *LiveGameStore) PlayerExistsById(id uuid.UUID) bool {
 	_, err := lgs.GetPlayerById(id)
 	return err == nil
+}
+
+func (lsg *LiveGameStore) CreatePlayerId() uuid.UUID {
+	for {
+		id := uuid.New()
+		if !lsg.PlayerExistsById(id) {
+			return id
+		}
+	}
 }

@@ -69,11 +69,12 @@ func (wsc *WebSocketController) HandleConnection(c *gin.Context) {
 		return
 	}
 
-	err = wsc.manager.LiveGameStore.AddPlayer(playerName, client.ID)
+	playerId, err := wsc.manager.LiveGameStore.AddPlayer(playerName)
 	if err != nil {
 		client.ErrorAndKill("Failed to add player to game store")
 		return
 	}
+	client.UserData["playerId"] = playerId
 
 	wsc.manager.Register <- client
 	client.Logf("New Client registered")

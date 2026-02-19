@@ -188,9 +188,6 @@ func (m *Manager) ClientCount() int {
 }
 
 func (m *Manager) CreateNewClientID() uuid.UUID {
-	m.mutex.RLock()
-	defer m.mutex.RUnlock()
-
 	for {
 		id := uuid.New()
 		if !m.ClientIDExists(id) {
