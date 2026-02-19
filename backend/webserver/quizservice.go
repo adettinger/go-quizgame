@@ -1,11 +1,10 @@
 package webserver
 
 import (
-	"errors"
-	"fmt"
 	"time"
 
 	"github.com/adettinger/go-quizgame/models"
+	"github.com/adettinger/go-quizgame/types"
 	"github.com/google/uuid"
 )
 
@@ -24,11 +23,11 @@ func NewQuizService(ds *DataStore, ss *SessionStore) *QuizService {
 func (qs *QuizService) EvaluateQuiz(sessionId uuid.UUID, submission []models.Problem) (models.EvaluateQuizResponse, error) {
 	isActive, err := qs.ss.IsSessionActive(sessionId, time.Now())
 	if err != nil {
-		return models.EvaluateQuizResponse{}, errors.New("Cannot find session")
+		return models.EvaluateQuizResponse{}, &types.ErrSessionNotFound{SessionID: sessionId}
 	}
 	defer qs.ss.DeleteSession(sessionId) //Delete session after processing this function
 	if !isActive {
-		return models.EvaluateQuizResponse{}, errors.New("Session is expired")
+		return models.EvaluateQuizResponse{}, &types.ErrSessionExpired{SessionID: sessionId}
 	}
 
 	questionResponses := make([]models.QuestionResponse, len(submission))
@@ -36,7 +35,7 @@ func (qs *QuizService) EvaluateQuiz(sessionId uuid.UUID, submission []models.Pro
 	for i, s := range submission {
 		matchingProblem, err := qs.ds.GetProblemById(s.Id)
 		if err != nil {
-			return models.EvaluateQuizResponse{}, fmt.Errorf("Cannot find problem with Id %v", s.Id)
+			return models.EvaluateQuizResponse{}, &types.ErrProblemNotFound{ProblemId: s.Id}
 		}
 		correct := s.Answer == matchingProblem.Answer
 		questionResponses[i] = models.QuestionResponse{

@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"log"
 	"net/http"
 	"time"
 
@@ -49,8 +50,8 @@ func (qc QuizController) SubmitQuiz(c *gin.Context) {
 
 	response, err := qc.qs.EvaluateQuiz(request.SessionID, request.Questions)
 	if err != nil {
-		// Warning: Sending service error directly to frontend
-		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		log.Printf("QuizController: EvaluateQuiz: %v", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Cannot evaluate quiz"})
 		return
 	}
 	c.JSON(http.StatusOK, response)
