@@ -59,9 +59,8 @@ func (wsc *WebSocketController) HandleConnection(c *gin.Context) {
 		Conn:     conn,
 		Manager:  wsc.manager,
 		Send:     make(chan models.Message, 256),
-		UserData: make(map[string]interface{}),
+		UserData: socket.UserData{},
 	}
-	client.UserData["name"] = playerName
 	log.Print("New Client created")
 
 	if !utils.IsPlayerNameValid(playerName, PlayerNameMaxLength) {
@@ -74,7 +73,8 @@ func (wsc *WebSocketController) HandleConnection(c *gin.Context) {
 		client.ErrorAndKill("Failed to add player to game store")
 		return
 	}
-	client.UserData["playerId"] = playerId
+	client.UserData.Name = playerName
+	client.UserData.PlayerId = playerId
 
 	wsc.manager.Register <- client
 	client.Logf("New Client registered")
@@ -147,7 +147,7 @@ func (wsc *WebSocketController) readPump(client *socket.Client) {
 			continue
 		}
 
-		message.PlayerName = client.UserData["name"].(string)
+		message.PlayerName = client.UserData.Name
 		message.Timestamp = time.Now()
 
 		client.Logf("Processing message of type: ", message.Type)
