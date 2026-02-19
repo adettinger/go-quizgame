@@ -47,7 +47,7 @@ export function ViewProblem() {
     }
 
     if (!problem) {
-        return <div className="text-center p-4">Problem not found.</div>; /* TODO: I dont think this is hit since we throw error*/
+        return <div className="text-center p-4">Problem not found.</div>;
     }
 
     return (
