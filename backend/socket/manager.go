@@ -10,12 +10,13 @@ import (
 
 	livegame "github.com/adettinger/go-quizgame/liveGame"
 	"github.com/adettinger/go-quizgame/models"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
 // Client represents a WebSocket client connection
 type Client struct {
-	ID       string
+	ID       uuid.UUID
 	Conn     *websocket.Conn
 	Manager  *Manager
 	Send     chan models.Message
@@ -64,18 +65,18 @@ func (client *Client) ErrorAndKill(errorMsg string) {
 
 // Manager manages WebSocket connections
 type Manager struct {
-	Clients       map[string]*Client
+	Clients       map[uuid.UUID]*Client
 	Register      chan *Client
 	Unregister    chan *Client
 	Broadcast     chan models.Message
 	LiveGameStore *livegame.LiveGameStore
-	mutex         sync.Mutex
+	mutex         sync.RWMutex
 }
 
 // Creates a new WebSocket manager
 func NewManager() *Manager {
 	return &Manager{
-		Clients:       make(map[string]*Client),
+		Clients:       make(map[uuid.UUID]*Client),
 		Register:      make(chan *Client),
 		Unregister:    make(chan *Client),
 		Broadcast:     make(chan models.Message),
@@ -106,8 +107,8 @@ func (m *Manager) Start() {
 		case client := <-m.Unregister:
 			if _, ok := m.Clients[client.ID]; ok {
 				leaveMsg := models.CreateMessage(
-					models.MessageTypeLeave, 
-					client.UserData["name"].(string), 
+					models.MessageTypeLeave,
+					client.UserData["name"].(string),
 					models.MessageTextContent{Text: "has left the game"})
 				func() {
 					m.mutex.Lock()
@@ -127,12 +128,12 @@ func (m *Manager) Start() {
 			log.Printf("Broadcasting message of type %s from %s", message.Type, message.PlayerName)
 
 			// Efficiency concern: Copying clients to avoid holding lock during sends
-			var clients map[string]*Client
+			var clients map[uuid.UUID]*Client
 			func() {
 				m.mutex.Lock()
 				defer m.mutex.Unlock()
 
-				clients = make(map[string]*Client, len(m.Clients))
+				clients = make(map[uuid.UUID]*Client, len(m.Clients))
 				for id, client := range m.Clients {
 					clients[id] = client
 				}
@@ -141,7 +142,7 @@ func (m *Manager) Start() {
 			log.Printf("Sending to %d clients", len(clients))
 
 			for id, client := range clients {
-				func(id string, client *Client) {
+				func(id uuid.UUID, client *Client) {
 					select {
 					case client.Send <- message:
 						client.Logf("Message queued")
@@ -160,7 +161,7 @@ func (m *Manager) Start() {
 }
 
 // SendToClient sends a message to a specific client
-func (m *Manager) SendToClient(clientID string, message models.Message) bool {
+func (m *Manager) SendToClient(clientID uuid.UUID, message models.Message) bool {
 	m.mutex.Lock()
 	client, exists := m.Clients[clientID]
 	m.mutex.Unlock()
@@ -181,7 +182,27 @@ func (m *Manager) BroadcastMessage(message models.Message) {
 
 // ClientCount returns the number of connected clients
 func (m *Manager) ClientCount() int {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
 	return len(m.Clients)
+}
+
+func (m *Manager) CreateNewClientID() uuid.UUID {
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+
+	for {
+		id := uuid.New()
+		if !m.ClientIDExists(id) {
+			return id
+		}
+	}
+}
+
+func (m *Manager) ClientIDExists(id uuid.UUID) bool {
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+
+	_, ok := m.Clients[id]
+	return ok
 }

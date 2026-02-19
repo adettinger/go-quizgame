@@ -11,7 +11,6 @@ import (
 	"github.com/adettinger/go-quizgame/socket"
 	"github.com/adettinger/go-quizgame/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
@@ -55,9 +54,8 @@ func (wsc *WebSocketController) HandleConnection(c *gin.Context) {
 		return
 	}
 
-	clientID := uuid.New().String()
 	client := &socket.Client{
-		ID:       clientID,
+		ID:       wsc.manager.CreateNewClientID(),
 		Conn:     conn,
 		Manager:  wsc.manager,
 		Send:     make(chan models.Message, 256),
@@ -66,20 +64,19 @@ func (wsc *WebSocketController) HandleConnection(c *gin.Context) {
 	client.UserData["name"] = playerName
 	log.Print("New Client created")
 
-	// Validate player name
 	if !utils.IsPlayerNameValid(playerName, PlayerNameMaxLength) {
 		client.ErrorAndKill("Invalid name")
 		return
 	}
 
-	_, err = wsc.manager.LiveGameStore.AddPlayer(playerName)
+	err = wsc.manager.LiveGameStore.AddPlayer(playerName, client.ID)
 	if err != nil {
-		client.ErrorAndKill("Player name is already used")
+		client.ErrorAndKill("Failed to add player to game store")
 		return
 	}
 
 	wsc.manager.Register <- client
-	log.Print("New Client registered")
+	client.Logf("New Client registered")
 
 	// Start goroutines for reading and writing
 	go wsc.readPump(client)
