@@ -24,8 +24,6 @@ export function Game() {
     const [timeout, setTimeout] = useState<Date>();
     const [score, setScore] = useState(-1);
     const [quizItems, setQuizItems] = useState<quizItems[]>([]);
-    // const [answersMap, setAnswersMap] = useState<Map<string, string>>();
-    // const [quizResponse, setQuizResponse] = useState<SubmitQuizResponse>();
 
     useEffect(() => {
         if (data) {
@@ -102,7 +100,7 @@ export function Game() {
         };
     }
 
-    const handleSubmit = async (event) => {
+    const handleSubmit = async (event: any) => {
         event.preventDefault();
         console.log('submitting quiz with answers', quizItems);
 
@@ -146,8 +144,8 @@ export function Game() {
                 <Flex direction={"column"} gap="3" justify="center">
 
                     <Flex direction="column" gap="3">
-                        {quizItems?.map((problem) => (
-                            <Form.Field name={`Question-${problem.Id}`}>
+                        {quizItems?.map((problem, index) => (
+                            <Form.Field key={index} name={`Question-${problem.Id}`}>
                                 <Flex direction={"column"}>
                                     <Form.Label>{problem.Question}</Form.Label>
                                     <Form.Control asChild>

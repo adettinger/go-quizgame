@@ -59,8 +59,8 @@ export function ProblemList() {
                 </Table.Header>
 
                 <Table.Body>
-                    {data.map((problem) => (
-                        <Table.Row>
+                    {data.map((problem, index) => (
+                        <Table.Row key={index}>
                             <Table.RowHeaderCell>
                                 <Link to={`/problem/${problem.Id}`}>{problem.Id}</Link>
                             </Table.RowHeaderCell>

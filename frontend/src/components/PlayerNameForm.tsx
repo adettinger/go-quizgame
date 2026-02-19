@@ -1,4 +1,3 @@
-import { DotFilledIcon } from "@radix-ui/react-icons";
 import { Button, Flex, Text, TextField, Tooltip } from "@radix-ui/themes";
 import { useState } from "react";
 
@@ -12,8 +11,10 @@ export interface PlayerNameFormProps {
 export function PlayerNameForm({ isConnected, onSubmit, onQuit }: PlayerNameFormProps) {
     const [playerName, setPlayerName] = useState('');
 
+    const MaxNameLength = 20;
+
     const isNameValid = (name: string) => {
-        if (playerName.trim() === "" || playerName.trim() !== name || name.replace(/[^a-zA-Z0-9\s]/g, '') !== name) {
+        if (playerName.trim() === "" || playerName.trim() !== name || name.replace(/[^a-zA-Z0-9\s]/g, '') !== name || playerName.length > MaxNameLength) {
             return false;
         }
         return true;
@@ -46,12 +47,9 @@ export function PlayerNameForm({ isConnected, onSubmit, onQuit }: PlayerNameForm
                         ? "Click to join the game"
                         :
                         <Flex direction="column">
-                            <Text>
-                                Player name must contain only letters, numbers, and spaces, and cannot be empty
-                            </Text>
-                            <Text>
-                                Cannot begin or end with space
-                            </Text>
+                            <Text>Player name must contain only letters, numbers, and spaces, and cannot be empty</Text>
+                            <Text>{`Cannot be longer than ${MaxNameLength} characters`}</Text>
+                            <Text>Cannot begin or end with space</Text>
                         </Flex>
                 }>
                     <Button

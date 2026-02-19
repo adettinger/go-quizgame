@@ -1,8 +1,10 @@
+@use "sass:color";
+
 // Variables
 $primary-color: #3498db;
 $secondary-color: #2c3e50;
 $text-color: #333;
-$hover-color: darken($primary-color, 10%);
+$hover-color: color.adjust($primary-color, $lightness: -10%);
 $active-color: $primary-color;
 $nav-height: 60px;
 $transition-speed: 0.3s;
