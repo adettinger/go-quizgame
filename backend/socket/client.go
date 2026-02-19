@@ -12,10 +12,21 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type ConnectionInterface interface {
+	Close() error
+	SetPongHandler(h func(appData string) error)
+
+	ReadMessage() (messageType int, p []byte, err error)
+	WriteMessage(messageType int, data []byte) error
+
+	SetReadDeadline(t time.Time) error
+	SetWriteDeadline(t time.Time) error
+}
+
 // Client represents a WebSocket client connection
 type Client struct {
 	ID       uuid.UUID
-	Conn     *websocket.Conn
+	Conn     ConnectionInterface
 	Manager  *Manager
 	Send     chan models.Message
 	UserData UserData
