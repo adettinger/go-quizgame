@@ -48,9 +48,11 @@ func (wsc *WebSocketController) HandleConnection(c *gin.Context) {
 
 	playerName := c.Param("playerName")
 
+	// TODO: reorder validation?
 	conn, err := wsc.upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Printf("Failed to upgrade connection: %v", err)
+		// TODO: better response
 		return
 	}
 
