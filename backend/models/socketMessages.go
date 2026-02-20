@@ -6,12 +6,12 @@ type MessageType string
 
 // Define your message types
 const (
-	MessageTypeChat       = "chat"
-	MessageTypeJoin       = "join"
-	MessageTypeLeave      = "leave"
-	MessageTypeGameUpdate = "game_update"
-	MessageTypeError      = "error"
-	MessageTypePlayerList = "player_list"
+	MessageTypeChat       MessageType = "chat"
+	MessageTypeJoin       MessageType = "join"
+	MessageTypeLeave      MessageType = "leave"
+	MessageTypeGameUpdate MessageType = "game_update"
+	MessageTypeError      MessageType = "error"
+	MessageTypePlayerList MessageType = "player_list"
 )
 
 type MessageTextContent struct {
@@ -35,10 +35,10 @@ type PlayerListContent struct {
 }
 
 func CreateMessage(Type MessageType, PlayerName string, Content interface{}) Message {
-	return Message {
-		Type: Type,
-		Timestamp: time.Now(),
+	return Message{
+		Type:       Type,
+		Timestamp:  time.Now(),
 		PlayerName: PlayerName,
-		Content: Content,
+		Content:    Content,
 	}
 }

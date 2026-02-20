@@ -1,6 +1,7 @@
 package socket
 
 import (
+	"fmt"
 	"log"
 	"sync"
 
@@ -36,10 +37,8 @@ func (m *Manager) Start() {
 		select {
 		case client := <-m.Register:
 			func() {
-				m.mutex.Lock()
-				defer m.mutex.Unlock()
-				m.Clients[client.ID] = client
-				client.Logf("Client connected")
+				m.AddClient(client)
+				client.Logf("Client added to manager")
 
 			}()
 			go func() {
@@ -65,6 +64,7 @@ func (m *Manager) Start() {
 				}()
 
 				go func() {
+					// TODO: Removing player from game store can be done in controller that writes to unregister
 					m.LiveGameStore.RemovePlayerByName(client.UserData.Name)
 					log.Printf("Broadcasting leave message for %s", client.UserData.Name)
 					m.BroadcastMessage(leaveMsg)
@@ -148,4 +148,14 @@ func (m *Manager) ClientIDExists(id uuid.UUID) bool {
 
 	_, ok := m.Clients[id]
 	return ok
+}
+
+func (m *Manager) AddClient(client *Client) error {
+	if m.ClientIDExists(client.ID) {
+		return fmt.Errorf("Client already exists with ID: %v", client.ID.String())
+	}
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+	m.Clients[client.ID] = client
+	return nil
 }
