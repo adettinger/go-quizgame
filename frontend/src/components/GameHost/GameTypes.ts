@@ -29,7 +29,7 @@ export enum ConnectionStatus {
     Disconnected = "Disconnected",
     Connecting = "Connecting...",
     Connected = "Connected",
-    Error = "Error,"
+    Error = "Error",
 }
 
 export interface Player {

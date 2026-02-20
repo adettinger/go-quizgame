@@ -5,6 +5,7 @@ import (
 	"slices"
 	"sync"
 
+	"github.com/adettinger/go-quizgame/types"
 	"github.com/google/uuid"
 )
 
@@ -24,7 +25,7 @@ func NewLiveGameStore() *LiveGameStore {
 
 func (lgs *LiveGameStore) AddPlayer(name string) (uuid.UUID, error) {
 	if lgs.PlayerExistsByName(name) {
-		return uuid.Nil, errors.New("Player with name already exists")
+		return uuid.Nil, &types.ErrDuplicatePlayerName{PlayerName: name}
 	}
 	newPlayer := LivePlayer{
 		Id:   lgs.CreatePlayerId(),

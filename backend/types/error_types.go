@@ -45,3 +45,11 @@ func (e *ErrProblemNotFound) Error() string {
 /*
 // End Quiz Service errors
 */
+
+type ErrDuplicatePlayerName struct {
+	PlayerName string
+}
+
+func (e *ErrDuplicatePlayerName) Error() string {
+	return fmt.Sprintf("Duplicate player name: %v", e.PlayerName)
+}

@@ -117,19 +117,53 @@ export function GameControl() {
         }
     }, [playerList])
 
-    const connectWebSocket = (name: string) => {
+    const connectWebSocket = async (name: string) => {
         if (isSocketConnected()) {
             addMessage(createTextMessage(messageType.Admin, "Aleady connected!"));
             return;
         }
 
         try {
+            const wsUrl = `ws://localhost:8080/liveGame/player/${name.trim()}`;
+            const httpUrl = wsUrl.replace('ws:', 'http:');
+
+            const response = await fetch(httpUrl, {
+                method: 'GET',
+            }).catch(error => {
+                console.error("Fetch error: ", error);
+                throw new Error("Network error when checking connection availability");
+            });
+
+            // If the response is not successful, handle different status codes
+            if (!response.ok) {
+                const statusCode = response.status;
+                let errorMessage = `Server rejected connection (${statusCode})`;
+
+                // Differentiate between different status codes
+                if (statusCode === 400) {
+                    setServerError('Invalid player name format');
+                    errorMessage = "Invalid player name format (400 Bad Request)";
+                } else if (statusCode === 409) {
+                    setServerError('Player name already taken');
+                    errorMessage = "Player name already taken (409 Conflict)";
+                } else if (statusCode === 403) {
+                    setServerError('Access denied');
+                    errorMessage = "Access denied (403 Forbidden)";
+                } else if (statusCode >= 500) {
+                    setServerError('Server error occurred');
+                    errorMessage = "Server error occurred (500 Internal Server Error)";
+                }
+
+                throw new Error(errorMessage);
+            }
+
             setConnectionStatus(ConnectionStatus.Connecting);
-            socketRef.current = new WebSocket(`ws://localhost:8080/liveGame/player/${name.trim()}`);
+            socketRef.current = new WebSocket(wsUrl);
 
             socketRef.current.onopen = () => {
                 setConnectionStatus(ConnectionStatus.Connected);
                 addMessage(createTextMessage(messageType.Admin, "Connection established"));
+                setServerError('');
             };
 
             socketRef.current.onmessage = handleMessage;

@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/adettinger/go-quizgame/models"
 	"github.com/adettinger/go-quizgame/socket"
+	"github.com/adettinger/go-quizgame/types"
 	"github.com/adettinger/go-quizgame/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -48,11 +50,39 @@ func (wsc *WebSocketController) HandleConnection(c *gin.Context) {
 
 	playerName := c.Param("playerName")
 
-	// TODO: reorder validation?
+	// Request validation
+	if !utils.IsPlayerNameValid(playerName, PlayerNameMaxLength) {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid name"})
+		return
+	}
+
+	playerId, err := wsc.manager.LiveGameStore.AddPlayer(playerName)
+	if err != nil {
+		if _, ok := err.(*types.ErrDuplicatePlayerName); ok {
+			c.JSON(http.StatusConflict, gin.H{"message": "Duplicate player name"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to add player to game store"})
+		return
+	}
+
+	isWebSocketRequest := c.IsWebsocket() ||
+		(c.Request.Header.Get("Connection") == "Upgrade" &&
+			strings.ToLower(c.Request.Header.Get("Upgrade")) == "websocket")
+
+	if !isWebSocketRequest {
+		// This is a regular HTTP request, undo modifications and return success
+		wsc.manager.LiveGameStore.RemovePlayerByName(playerName)
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Player name is valid",
+		})
+		return
+	}
+
 	conn, err := wsc.upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Printf("Failed to upgrade connection: %v", err)
-		// TODO: better response
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to upgrade connection"})
 		return
 	}
 
@@ -61,22 +91,9 @@ func (wsc *WebSocketController) HandleConnection(c *gin.Context) {
 		Conn:     conn,
 		Manager:  wsc.manager,
 		Send:     make(chan models.Message, 256),
-		UserData: socket.UserData{},
+		UserData: socket.UserData{Name: playerName, PlayerId: playerId},
 	}
 	log.Print("New Client created")
-
-	if !utils.IsPlayerNameValid(playerName, PlayerNameMaxLength) {
-		client.ErrorAndKill("Invalid name")
-		return
-	}
-
-	playerId, err := wsc.manager.LiveGameStore.AddPlayer(playerName)
-	if err != nil {
-		client.ErrorAndKill("Failed to add player to game store")
-		return
-	}
-	client.UserData.Name = playerName
-	client.UserData.PlayerId = playerId
 
 	wsc.manager.Register <- client
 	client.Logf("New Client registered")
