@@ -35,7 +35,7 @@ export function CreateProblemForm() {
         return formValues.Question.trim() != "" && formValues.Answer.trim() != ""
     }
 
-    const handleSubmit = async (event) => {
+    const handleSubmit = async (event: any) => {
         event.preventDefault();
 
         console.log('Submitting new problem with data:', {

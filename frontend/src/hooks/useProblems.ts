@@ -6,5 +6,8 @@ export function useProblems() {
     return useQuery<Problem[], Error>({
         queryKey: ['problems'],
         queryFn: fetchProblems,
+        // staleTime: Infinity,
+        // refetchOnWindowFocus: false,
+        // refetchOnMount: false,
     });
 }

@@ -1,4 +1,4 @@
-import { Flex, Text, Card, ScrollArea, Badge } from "@radix-ui/themes";
+import { Flex, Text } from "@radix-ui/themes";
 import { useEffect, useRef, useState } from "react";
 import { ChatWindow, type chatMessage } from "../ChatWindow/ChatWindow";
 import { MessageLog } from "../MessageLog/MessageLog";

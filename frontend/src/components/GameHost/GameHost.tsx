@@ -1,8 +1,11 @@
-import { GameControl } from "../GameControl/GameControl";
+import { GameOptions } from "./GameOptions";
 
 
 export function GameHost() {
   return (
-    <GameControl />
+    <>
+      <h2>Game Host</h2>
+      <GameOptions />
+    </>
   );
 };

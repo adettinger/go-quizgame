@@ -14,6 +14,7 @@ const NavBar: React.FC = () => {
         { path: '/problem/new', name: 'Create Problem' },
         { path: '/quiz', name: 'Take Quiz' },
         { path: '/game/host', name: 'Host Game' },
+        { path: '/game/player', name: 'Play Game' },
     ];
     return (
         <nav className="navbar navbar-expand-lg navbar-dark bg-primary">
