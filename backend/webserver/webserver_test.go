@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"slices"
 	"testing"
 
 	"github.com/adettinger/go-quizgame/controllers"
@@ -124,7 +123,7 @@ func TestListProblems(t *testing.T) {
 	var responseBody []models.Problem
 	unmarshalError := json.Unmarshal(w.Body.Bytes(), &responseBody)
 	assert.NoError(t, unmarshalError)
-	if !slices.Equal(problemSet, responseBody) {
+	if !areProblemSlicesEqual(problemSet, responseBody) {
 		t.Fatalf("Expected resonse to equal problem set. Got %v", responseBody)
 	}
 }
@@ -273,4 +272,16 @@ func TestAddProblem(t *testing.T) {
 			}
 		})
 	}
+}
+
+func areProblemSlicesEqual(a []models.Problem, b []models.Problem) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i, _ := range a {
+		if !a[i].Equal(b[i]) {
+			return false
+		}
+	}
+	return true
 }

@@ -7,7 +7,9 @@ import (
 )
 
 type CreateProblemRequest struct {
+	Type     string
 	Question string
+	Choices  []string
 	Answer   string
 }
 
@@ -17,6 +19,7 @@ type StartQuizResponse struct {
 	Questions []Question
 }
 
+// TODO: Change request object
 type EvaluateQuizRequest struct {
 	SessionID uuid.UUID
 	Questions []Problem

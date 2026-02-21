@@ -20,6 +20,7 @@ func NewQuizService(ds *DataStore, ss *SessionStore) *QuizService {
 	}
 }
 
+// TODO: refactor submission request type
 func (qs *QuizService) EvaluateQuiz(sessionId uuid.UUID, submission []models.Problem) (models.EvaluateQuizResponse, error) {
 	isActive, err := qs.ss.IsSessionActive(sessionId, time.Now())
 	if err != nil {

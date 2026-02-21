@@ -81,10 +81,27 @@ func (ds *DataStore) DeleteProblemByIndex(id uuid.UUID) error {
 	return nil
 }
 
-func (ds *DataStore) AddProblem(pr models.CreateProblemRequest) models.Problem {
+// TODO: Move validation into business logic component
+func (ds *DataStore) AddProblem(pr models.CreateProblemRequest) (models.Problem, error) {
+	problemType, err := models.ParseProblemType(pr.Type)
+	if err != nil {
+		return models.Problem{}, err
+	}
+	if err = models.ValidateChoices(problemType, pr.Choices, pr.Answer); err != nil {
+		return models.Problem{}, err
+	}
+	if pr.Question == "" {
+		return models.Problem{}, errors.New("Question cannot be empty string")
+	}
+	if pr.Answer == "" {
+		return models.Problem{}, errors.New("Answer canot be empty string")
+	}
+
 	problem := models.Problem{
 		Id:       ds.getNewId(),
+		Type:     problemType,
 		Question: pr.Question,
+		Choices:  pr.Choices,
 		Answer:   pr.Answer,
 	}
 	ds.mu.Lock()
@@ -92,7 +109,7 @@ func (ds *DataStore) AddProblem(pr models.CreateProblemRequest) models.Problem {
 
 	ds.problems = append(ds.problems, problem)
 	ds.modified = true
-	return problem
+	return problem, nil
 }
 
 func (ds *DataStore) SaveProblems() error {

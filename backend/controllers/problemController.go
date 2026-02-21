@@ -3,6 +3,7 @@ package controllers
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -72,8 +73,14 @@ func (wc ProblemController) AddProblem(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request"})
 		return
 	}
+	fmt.Printf("ProblemRequest: %v\n", problemRequest)
 
-	problem := wc.ds.AddProblem(problemRequest)
+	problem, err := wc.ds.AddProblem(problemRequest)
+	if err != nil {
+		log.Printf("Error adding problem: %v", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request"})
+		return
+	}
 	c.JSON(http.StatusCreated, problem)
 }
 
