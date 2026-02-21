@@ -1,6 +1,6 @@
 import { Button, Flex, Switch, TextField, Tooltip } from "@radix-ui/themes";
 import * as Form from "@radix-ui/react-form";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ProblemPicker } from "./ProblemPicker";
 import { useProblems } from "../../hooks/useProblems";
 import type { Problem } from "../../types/problem";
@@ -31,15 +31,15 @@ export function GameOptions() {
         }
     }, [data]);
 
-    const selectQuestion = useCallback((questionToAdd: Problem) => {
+    const selectQuestion = (questionToAdd: Problem) => {
         setSelectedQuestions(prev => [...prev, questionToAdd]);
         setAvailableQuestions(prev => prev.filter(question => question.Id !== questionToAdd.Id));
-    }, []);
+    };
 
-    const deselectQuestion = useCallback((questionToRemove: Problem) => {
+    const deselectQuestion = (questionToRemove: Problem) => {
         setSelectedQuestions(prev => prev.filter(question => question.Id !== questionToRemove.Id));
         setAvailableQuestions(prev => [...prev, questionToRemove]);
-    }, []);
+    };
 
     return (
         // timelimit on questions

@@ -1,6 +1,7 @@
 import { Flex, IconButton, Table, Text } from "@radix-ui/themes";
 import type { Problem } from "../../types/problem";
 import { Cross1Icon, PlusIcon } from "@radix-ui/react-icons";
+import React from "react";
 
 export interface ProblemPickerProps {
     selectedQuestions: Problem[];
@@ -12,7 +13,7 @@ export interface ProblemPickerProps {
     error: Error | null;
 };
 
-export function ProblemPicker({ selectedQuestions, availableQuestions, selectQuestion, deselectQuestion, isLoading, isError, error }: ProblemPickerProps) {
+export const ProblemPicker = React.memo(function ({ selectedQuestions, availableQuestions, selectQuestion, deselectQuestion, isLoading, isError, error }: ProblemPickerProps) {
     if (isLoading) {
         return <div className="text-center p-4">Loading problems...</div>;
     }
@@ -102,4 +103,4 @@ export function ProblemPicker({ selectedQuestions, availableQuestions, selectQue
             }
         </Flex>
     );
-};
+});
