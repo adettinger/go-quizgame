@@ -1,19 +1,39 @@
 import { Flex, IconButton, Table, Text } from "@radix-ui/themes";
 import type { Problem } from "../../types/problem";
 import { Cross1Icon, PlusIcon } from "@radix-ui/react-icons";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useProblems } from "../../hooks/useProblems";
 
 export interface ProblemPickerProps {
-    selectedQuestions: Problem[];
-    availableQuestions: Problem[];
-    selectQuestion: (questionToAdd: Problem) => void;
-    deselectQuestion: (questionToRemove: Problem) => void;
-    isLoading: boolean;
-    isError: boolean;
-    error: Error | null;
+    setQuestionIds: (questionIds: string[]) => void;
 };
 
-export const ProblemPicker = React.memo(function ({ selectedQuestions, availableQuestions, selectQuestion, deselectQuestion, isLoading, isError, error }: ProblemPickerProps) {
+export const ProblemPicker = React.memo(function ({ setQuestionIds }: ProblemPickerProps) {
+    const { data, isLoading, isError, error } = useProblems();
+
+    const [availableQuestions, setAvailableQuestions] = useState<Problem[]>([]);
+    const [selectedQuestions, setSelectedQuestions] = useState<Problem[]>([]);
+
+    useEffect(() => {
+        if (!!data && data.length > 0 && availableQuestions.length === 0 && selectedQuestions.length === 0) {
+            setAvailableQuestions(data);
+        }
+    }, [data]);
+
+    useEffect(() => {
+        setQuestionIds(selectedQuestions.map(problem => problem.Id))
+    }, [selectedQuestions])
+
+    const selectQuestion = (questionToAdd: Problem) => {
+        setSelectedQuestions(prev => [...prev, questionToAdd]);
+        setAvailableQuestions(prev => prev.filter(question => question.Id !== questionToAdd.Id));
+    };
+
+    const deselectQuestion = (questionToRemove: Problem) => {
+        setSelectedQuestions(prev => prev.filter(question => question.Id !== questionToRemove.Id));
+        setAvailableQuestions(prev => [...prev, questionToRemove]);
+    };
+
     if (isLoading) {
         return <div className="text-center p-4">Loading problems...</div>;
     }
@@ -31,15 +51,15 @@ export const ProblemPicker = React.memo(function ({ selectedQuestions, available
     }
 
     return (
-        <Flex direction="column" align="center" justify="center">
+        <Flex direction="column" align="center" justify="center" style={{ width: '100%' }}>
             <h3>Selected Questions</h3>
             {selectedQuestions.length === 0 ?
                 <Text>No Questions Selected</Text>
                 :
-                <Table.Root variant="surface">
+                // TODO: Rendering longer questions?
+                <Table.Root variant="surface" style={{ width: '100%' }}>
                     <Table.Header>
                         <Table.Row>
-                            <Table.ColumnHeaderCell>ID</Table.ColumnHeaderCell>
                             <Table.ColumnHeaderCell>Question</Table.ColumnHeaderCell>
                             <Table.ColumnHeaderCell>Answer</Table.ColumnHeaderCell>
                             <Table.ColumnHeaderCell>Actions</Table.ColumnHeaderCell>
@@ -49,7 +69,6 @@ export const ProblemPicker = React.memo(function ({ selectedQuestions, available
                     <Table.Body>
                         {selectedQuestions.map((question) => (
                             <Table.Row key={question.Id}>
-                                <Table.Cell>{question.Id}</Table.Cell>
                                 <Table.Cell>{question.Question}</Table.Cell>
                                 <Table.Cell>{question.Answer}</Table.Cell>
                                 <Table.Cell>
@@ -71,10 +90,9 @@ export const ProblemPicker = React.memo(function ({ selectedQuestions, available
             {availableQuestions.length === 0 ?
                 <Text>No available questions remaining</Text>
                 :
-                <Table.Root variant="surface">
+                <Table.Root variant="surface" style={{ width: '100%' }}>
                     <Table.Header>
                         <Table.Row>
-                            <Table.ColumnHeaderCell>ID</Table.ColumnHeaderCell>
                             <Table.ColumnHeaderCell>Question</Table.ColumnHeaderCell>
                             <Table.ColumnHeaderCell>Answer</Table.ColumnHeaderCell>
                             <Table.ColumnHeaderCell>Actions</Table.ColumnHeaderCell>
@@ -84,7 +102,6 @@ export const ProblemPicker = React.memo(function ({ selectedQuestions, available
                     <Table.Body>
                         {availableQuestions.map((question) => (
                             <Table.Row key={question.Id}>
-                                <Table.Cell>{question.Id}</Table.Cell>
                                 <Table.Cell>{question.Question}</Table.Cell>
                                 <Table.Cell>{question.Answer}</Table.Cell>
                                 <Table.Cell>
