@@ -1,4 +1,4 @@
-import { Button, Flex, Text, TextField } from "@radix-ui/themes";
+import { Button, DropdownMenu, Flex, Text, TextField } from "@radix-ui/themes";
 import * as Form from "@radix-ui/react-form";
 import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
@@ -8,10 +8,13 @@ import { useToast } from "../Toast/ToastContext";
 import type { Question } from "../../types/question";
 import { useStartQuiz } from "../../hooks/useStartQuiz";
 import { CountdownTimer } from "./timer";
+import { ProblemType } from "../../types/problem";
 
 interface quizItems {
     Id: string;
+    Type: ProblemType;
     Question: string;
+    Choices: string[];
     Guess: string;
     Answer: string;
     Correct: boolean | undefined;
@@ -33,7 +36,9 @@ export function Game() {
             data.Questions.forEach((question: Question) => {
                 initialQuizItems.push({
                     Id: question.Id,
+                    Type: question.Type,
                     Question: question.Question,
+                    Choices: question.Choices,
                     Guess: '',
                     Answer: '',
                     Correct: undefined,
@@ -96,7 +101,7 @@ export function Game() {
     const createQuizSubmission = () => {
         return {
             SessionId: sessionID,
-            Questions: quizItems ? Array.from(quizItems, (quizItem) => ({ Id: quizItem.Id, Answer: quizItem.Guess })) : [],
+            QuestionSubmissions: quizItems ? Array.from(quizItems, (quizItem) => ({ QuestionId: quizItem.Id, Answer: quizItem.Guess })) : [],
         };
     }
 
@@ -148,16 +153,31 @@ export function Game() {
                             <Form.Field key={index} name={`Question-${problem.Id}`}>
                                 <Flex direction={"column"}>
                                     <Form.Label>{problem.Question}</Form.Label>
-                                    <Form.Control asChild>
-                                        <TextField.Root
-                                            required
-                                            value={problem.Guess}
-                                            onChange={(event) => updateGuess(problem.Id, event.target.value)}
-                                            readOnly={score >= 0}
-                                        >
-                                            <TextField.Slot />
-                                        </TextField.Root>
-                                    </Form.Control>
+                                    <div>
+                                        {
+                                            problem.Type === ProblemType.Text &&
+                                            <TextField.Root
+                                                required
+                                                value={problem.Guess}
+                                                onChange={(event) => updateGuess(problem.Id, event.target.value)}
+                                                readOnly={score >= 0}
+                                            >
+                                                <TextField.Slot />
+                                            </TextField.Root>
+                                        }
+                                        {problem.Type === ProblemType.Choice &&
+                                            <DropdownMenu.Root>
+                                                <DropdownMenu.Trigger>
+                                                    <Button color='gray' variant='soft'>{problem.Guess === "" ? "Select an option" : problem.Guess}<DropdownMenu.TriggerIcon /></Button>
+                                                </DropdownMenu.Trigger>
+                                                <DropdownMenu.Content color="gray" variant='soft'>
+                                                    {problem.Choices.map((choice, index) => (
+                                                        <DropdownMenu.Item key={index} onClick={(event) => updateGuess(problem.Id, choice)}>{choice}</DropdownMenu.Item>
+                                                    ))}
+                                                </DropdownMenu.Content>
+                                            </DropdownMenu.Root>
+                                        }
+                                    </div>
                                     {problem.Correct !== undefined &&
                                         <>
                                             {problem.Correct === false ?
@@ -172,7 +192,7 @@ export function Game() {
                         ))}
                     </Flex>
                     <Form.Submit asChild>
-                        <Button disabled={score >= 0} style={{ alignSelf: 'center' }}> Submit Quiz </Button>
+                        <Button disabled={score >= 0 || quizItems.some(item => item.Guess === "")} style={{ alignSelf: 'center' }}> Submit Quiz </Button>
                     </Form.Submit>
                 </Flex>
             </Form.Root>

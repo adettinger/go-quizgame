@@ -1,9 +1,9 @@
 export interface QuizSubmission {
     SessionId: string;
-    Questions: QuestionSubmission[];
+    QuestionSubmissions: QuestionSubmission[];
 }
 
 export interface QuestionSubmission {
-    Id: string;
+    QuestionId: string;
     Answer: string;
 }
