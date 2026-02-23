@@ -1,4 +1,4 @@
-import { Button, DropdownMenu, Flex } from "@radix-ui/themes";
+import { Button, DropdownMenu, Flex, Text, Tooltip } from "@radix-ui/themes";
 import * as Form from "@radix-ui/react-form";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -7,6 +7,7 @@ import './Toast/ToastStyles.scss';
 import { useToast } from "./Toast/ToastContext";
 import { Link } from "react-router-dom";
 import { getEnumKeyByValue, MAX_PROBLEM_CHOICES, ProblemType, type Problem } from "../types/problem";
+import { EditChoicesTable } from "./EditChoices";
 
 interface workingProblem {
     Type: ProblemType;
@@ -41,6 +42,8 @@ export function CreateProblemForm() {
     })
 
     const areAllFieldsValid = () => {
+        // TODO: Only allow certain chars in fields
+
         // Question and answer are not empty
         if (formValues.Question.trim() === "" && formValues.Answer.trim() === "") {
             return false
@@ -55,7 +58,7 @@ export function CreateProblemForm() {
                 return false
             }
             // Answer must be one of the choices
-            if (!formValues.Choices.some(choice => choice.toLowerCase() === formValues.Answer)) {
+            if (!formValues.Choices.some(choice => choice.toLowerCase() === formValues.Answer.toLowerCase())) {
                 return false
             }
         }
@@ -117,8 +120,10 @@ export function CreateProblemForm() {
                 </Form.Field>
 
                 {formValues.Type === ProblemType.Choice &&
-                    <div>WIP: Edit choices</div>
-                    // TODO: Make a component for editing choices
+                    <EditChoicesTable
+                        choices={formValues.Choices}
+                        setChoices={(choices: string[]) => setFormValues({ ...formValues, Choices: choices })}
+                    />
                 }
 
                 <Form.Field name="Answer">
@@ -136,7 +141,18 @@ export function CreateProblemForm() {
                     </Form.Control>
                 </Form.Field>
                 <Form.Submit asChild >
-                    <Button disabled={!areAllFieldsValid()} style={{ alignSelf: 'center' }}>Post a question</Button>
+                    <Tooltip content={
+                        formValues.Type === ProblemType.Text
+                            ? "Fill in all fields"
+                            :
+                            <Flex direction="column">
+                                <Text>Must have at least 2 choices</Text>
+                                <Text>Answer must be one of the choices</Text>
+                                <Text>{`Can have at most ${MAX_PROBLEM_CHOICES} choices`}</Text>
+                            </Flex>
+                    }>
+                        <Button disabled={!areAllFieldsValid()} style={{ alignSelf: 'center' }}>Post a question</Button>
+                    </Tooltip>
                 </Form.Submit>
             </Flex>
         </Form.Root >
