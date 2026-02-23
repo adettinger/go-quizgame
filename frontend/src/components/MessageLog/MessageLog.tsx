@@ -1,4 +1,4 @@
-import { Button, Card, Flex, ScrollArea, Table, Text } from "@radix-ui/themes";
+import { Card, Flex, ScrollArea, Table } from "@radix-ui/themes";
 import './MessageLog.scss'
 import type { WebSocketMessage } from "../GameHost/GameTypes";
 import { Dropdown } from "../Dropdown";

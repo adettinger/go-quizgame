@@ -1,10 +1,11 @@
-import { Button, DataList, Flex } from "@radix-ui/themes";
+import { Button, DataList, DropdownMenu, Flex } from "@radix-ui/themes";
 import { useNavigate, useParams } from "react-router-dom";
 import { useProblem } from "../../hooks/useProblem";
 import { TrashIcon } from "@radix-ui/react-icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteProblemById } from "../../services/problemService";
 import { useToast } from "../Toast/ToastContext";
+import { ProblemType } from "../../types/problem";
 
 
 export function ViewProblem() {
@@ -58,9 +59,31 @@ export function ViewProblem() {
                     <DataList.Value>{problem.Id}</DataList.Value>
                 </DataList.Item>
                 <DataList.Item>
+                    <DataList.Label>Type</DataList.Label>
+                    <DataList.Value>{problem.Type}</DataList.Value>
+                </DataList.Item>
+                <DataList.Item>
                     <DataList.Label>Question</DataList.Label>
                     <DataList.Value>{problem.Question}</DataList.Value>
                 </DataList.Item>
+
+                {problem.Type === ProblemType.Choice &&
+                    <DataList.Item>
+                        <DataList.Label>Choices</DataList.Label>
+                        <DataList.Value>
+                            <DropdownMenu.Root>
+                                <DropdownMenu.Trigger>
+                                    <Button color='gray' variant='soft'>Choices <DropdownMenu.TriggerIcon /></Button>
+                                </DropdownMenu.Trigger>
+                                <DropdownMenu.Content color="gray" variant='soft'>
+                                    {problem.Choices.map((choice, index) => (
+                                        <DropdownMenu.Item key={index}>{choice}</DropdownMenu.Item>
+                                    ))}
+                                </DropdownMenu.Content>
+                            </DropdownMenu.Root>
+                        </DataList.Value>
+                    </DataList.Item>
+                }
                 <DataList.Item>
                     <DataList.Label>Answer</DataList.Label>
                     <DataList.Value>{problem.Answer}</DataList.Value>

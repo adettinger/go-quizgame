@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom';
 import { useProblems } from '../hooks/useProblems';
-import { Flex, IconButton, Table } from "@radix-ui/themes"
+import { Button, DropdownMenu, Flex, IconButton, Table } from "@radix-ui/themes"
 import { TrashIcon } from '@radix-ui/react-icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { deleteProblemById } from '../services/problemService';
 import { useToast } from './Toast/ToastContext';
+import { ProblemType } from '../types/problem';
 
 export function ProblemList() {
     const queryClient = useQueryClient();
@@ -52,7 +53,9 @@ export function ProblemList() {
                 <Table.Header>
                     <Table.Row>
                         <Table.ColumnHeaderCell>ID</Table.ColumnHeaderCell>
+                        <Table.ColumnHeaderCell>Type</Table.ColumnHeaderCell>
                         <Table.ColumnHeaderCell>Question</Table.ColumnHeaderCell>
+                        <Table.ColumnHeaderCell>Choices</Table.ColumnHeaderCell>
                         <Table.ColumnHeaderCell>Answer</Table.ColumnHeaderCell>
                         <Table.ColumnHeaderCell>Actions</Table.ColumnHeaderCell>
                     </Table.Row>
@@ -64,7 +67,22 @@ export function ProblemList() {
                             <Table.RowHeaderCell>
                                 <Link to={`/problem/${problem.Id}`}>{problem.Id}</Link>
                             </Table.RowHeaderCell>
+                            <Table.Cell>{problem.Type}</Table.Cell>
                             <Table.Cell>{problem.Question}</Table.Cell>
+                            <Table.Cell>
+                                {problem.Type === ProblemType.Choice &&
+                                    <DropdownMenu.Root>
+                                        <DropdownMenu.Trigger>
+                                            <Button color='gray' variant='soft'>Choices <DropdownMenu.TriggerIcon /></Button>
+                                        </DropdownMenu.Trigger>
+                                        <DropdownMenu.Content color="gray" variant='soft'>
+                                            {problem.Choices.map((choice, index) => (
+                                                <DropdownMenu.Item key={index}>{choice}</DropdownMenu.Item>
+                                            ))}
+                                        </DropdownMenu.Content>
+                                    </DropdownMenu.Root>
+                                }
+                            </Table.Cell>
                             <Table.Cell>{problem.Answer}</Table.Cell>
                             <Table.Cell>
                                 <IconButton
