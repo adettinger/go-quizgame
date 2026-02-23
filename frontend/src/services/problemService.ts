@@ -1,4 +1,4 @@
-import { type Problem } from '../types/problem';
+import { ProblemType, type Problem } from '../types/problem';
 import type { Question } from '../types/question';
 import type { QuestionSubmission, QuizSubmission } from '../types/requests';
 import type { StartQuizResponse, SubmitQuizResponse } from '../types/responses';
@@ -47,8 +47,10 @@ export async function fetchProblemById(id: string): Promise<Problem> {
 
 // TODO: Move interfaces
 interface ProblemFormData {
+    Type: ProblemType,
     Question: string;
     Answer: string;
+    Choices: string[];
 }
 
 export async function createProblem(data: ProblemFormData): Promise<Problem> {

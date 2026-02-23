@@ -1,4 +1,4 @@
-import { Button, Flex } from "@radix-ui/themes";
+import { Button, DropdownMenu, Flex } from "@radix-ui/themes";
 import * as Form from "@radix-ui/react-form";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -6,13 +6,22 @@ import { createProblem } from "../services/problemService";
 import './Toast/ToastStyles.scss';
 import { useToast } from "./Toast/ToastContext";
 import { Link } from "react-router-dom";
-import type { Problem } from "../types/problem";
+import { getEnumKeyByValue, MAX_PROBLEM_CHOICES, ProblemType, type Problem } from "../types/problem";
+
+interface workingProblem {
+    Type: ProblemType;
+    Question: string;
+    Choices: string[];
+    Answer: string;
+}
 
 export function CreateProblemForm() {
     const queryClient = useQueryClient();
     const { showToast } = useToast();
-    const [formValues, setFormValues] = useState({
+    const [formValues, setFormValues] = useState<workingProblem>({
+        Type: ProblemType.Text,
         Question: "",
+        Choices: [],
         Answer: "",
     });
 
@@ -21,7 +30,7 @@ export function CreateProblemForm() {
 
         onSuccess: (problem: Problem) => {
             queryClient.invalidateQueries({ queryKey: ['problems'] })
-            setFormValues({ Question: "", Answer: "" })
+            setFormValues({ Type: ProblemType.Text, Question: "", Choices: [], Answer: "" })
             showToast('success', "Success", <>Created problem <Link to={`/problem/${problem.Id}`}>{problem.Id}</Link> successfully</>);
         },
 
@@ -32,7 +41,25 @@ export function CreateProblemForm() {
     })
 
     const areAllFieldsValid = () => {
-        return formValues.Question.trim() != "" && formValues.Answer.trim() != ""
+        // Question and answer are not empty
+        if (formValues.Question.trim() === "" && formValues.Answer.trim() === "") {
+            return false
+        }
+        // Type type has no choices
+        if (formValues.Type === ProblemType.Choice) {
+            if (formValues.Choices.length < 2 || formValues.Choices.length > MAX_PROBLEM_CHOICES) {
+                return false
+            }
+            // Choice cannot be empty string
+            if (formValues.Choices.some(choice => choice === "")) {
+                return false
+            }
+            // Answer must be one of the choices
+            if (!formValues.Choices.some(choice => choice.toLowerCase() === formValues.Answer)) {
+                return false
+            }
+        }
+        return true;
     }
 
     const handleSubmit = async (event: any) => {
@@ -44,14 +71,36 @@ export function CreateProblemForm() {
         });
 
         mutation.mutate({
+            Type: formValues.Type,
             Question: formValues.Question.trim(),
             Answer: formValues.Answer.trim(),
+            // TODO: Clean all the choices
+            Choices: formValues.Type === ProblemType.Text ? [] : formValues.Choices,
         })
     }
+
+    const setType = (type: ProblemType) => {
+        setFormValues({ ...formValues, Type: type })
+    };
 
     return (
         <Form.Root onSubmit={handleSubmit}>
             <Flex direction={"column"} gap="3">
+                <Form.Field name="Type">
+                    <Form.Label>Type: </Form.Label>
+                    <DropdownMenu.Root>
+                        <DropdownMenu.Trigger>
+                            <Button color='gray' variant='soft'>{getEnumKeyByValue(ProblemType, formValues.Type)}<DropdownMenu.TriggerIcon /></Button>
+                        </DropdownMenu.Trigger>
+                        <DropdownMenu.Content color="gray" variant='soft'>
+                            {Object.keys(ProblemType).map((type, index) => (
+                                <DropdownMenu.Item key={index} onClick={() => setType(ProblemType[type as keyof typeof ProblemType])}>{type}</DropdownMenu.Item>
+                            ))}
+                        </DropdownMenu.Content>
+                    </DropdownMenu.Root>
+
+                </Form.Field>
+
                 <Form.Field name="Question">
                     <Form.Label>Question: </Form.Label>
                     <Form.Message match="valueMissing">
@@ -66,6 +115,11 @@ export function CreateProblemForm() {
                         />
                     </Form.Control>
                 </Form.Field>
+
+                {formValues.Type === ProblemType.Choice &&
+                    <div>WIP: Edit choices</div>
+                    // TODO: Make a component for editing choices
+                }
 
                 <Form.Field name="Answer">
                     <Form.Label>Answer: </Form.Label>
