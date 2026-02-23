@@ -48,7 +48,7 @@ func ValidateChoices(problemType ProblemType, choices []string, answer string) e
 			if c == "" {
 				return fmt.Errorf("Choice cannot be empty string")
 			}
-			if c == answer {
+			if strings.EqualFold(c, answer) {
 				choiceFound = true
 			}
 		}
@@ -71,7 +71,7 @@ type Problem struct {
 }
 
 func (p Problem) String() string {
-	return fmt.Sprintf("id: %v, question: %v, answer: %v", p.Id, p.Question, p.Answer)
+	return fmt.Sprintf("id: %v, type: %v, question: %v, choices: %v, answer: %v", p.Id, p.Type.String(), p.Question, p.Choices, p.Answer)
 }
 
 func (p Problem) ToStringSlice() []string {
@@ -95,9 +95,11 @@ func serializeArray(arr []string) string {
 
 type Question struct {
 	Id       uuid.UUID
+	Type     ProblemType
 	Question string
+	Choices  []string
 }
 
 func (q Question) String() string {
-	return fmt.Sprintf("id: %v, question: %v", q.Id, q.Question)
+	return fmt.Sprintf("id: %v, type: %v, question: %v, choices: %v", q.Id, q.Type.String(), q.Question, q.Choices)
 }

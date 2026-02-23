@@ -17,6 +17,7 @@ import (
 // String Problem: ID, string, question, , answer
 // Choice problem: Id, choice, question, choices[], answer
 
+// TODO: Error messages should indicate they are from parser
 func ParseProblems(fileName string) ([]models.Problem, error) {
 	file, err := os.Open(fileName)
 	if err != nil {

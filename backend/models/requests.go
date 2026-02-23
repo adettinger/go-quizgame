@@ -19,10 +19,15 @@ type StartQuizResponse struct {
 	Questions []Question
 }
 
+type QuestionSubmission struct {
+	QuestionId uuid.UUID
+	Answer     string
+}
+
 // TODO: Change request object
 type EvaluateQuizRequest struct {
 	SessionID uuid.UUID
-	Questions []Problem
+	QuestionSubmissions []QuestionSubmission
 }
 
 type EvaluateQuizResponse struct {

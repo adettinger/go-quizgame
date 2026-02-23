@@ -66,6 +66,21 @@ func (ss *SessionStore) IsSessionActive(id uuid.UUID, time time.Time) (bool, err
 	return session.Timeout.After(time), nil
 }
 
+func (ss *SessionStore) MakeSessionInactive(id uuid.UUID) error {
+	isActive, err := ss.IsSessionActive(id, time.Now())
+	if err != nil {
+		return err
+	}
+	if !isActive {
+		return errors.New("Session is already inactive")
+	}
+
+	ss.mu.Lock()
+	defer ss.mu.Unlock()
+	ss.Sessions[id] = SessionData{time.Now()}
+	return nil
+}
+
 func (ss *SessionStore) DeleteSession(id uuid.UUID) {
 	ss.mu.Lock()
 	defer ss.mu.Unlock()

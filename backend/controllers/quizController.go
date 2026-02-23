@@ -48,7 +48,7 @@ func (qc QuizController) SubmitQuiz(c *gin.Context) {
 		return
 	}
 
-	response, err := qc.qs.EvaluateQuiz(request.SessionID, request.Questions)
+	response, err := qc.qs.EvaluateQuiz(request.SessionID, request.QuestionSubmissions)
 	if err != nil {
 		log.Printf("QuizController: EvaluateQuiz: %v", err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Cannot evaluate quiz"})

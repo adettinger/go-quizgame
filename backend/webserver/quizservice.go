@@ -1,6 +1,7 @@
 package webserver
 
 import (
+	"strings"
 	"time"
 
 	"github.com/adettinger/go-quizgame/models"
@@ -20,8 +21,7 @@ func NewQuizService(ds *DataStore, ss *SessionStore) *QuizService {
 	}
 }
 
-// TODO: refactor submission request type
-func (qs *QuizService) EvaluateQuiz(sessionId uuid.UUID, submission []models.Problem) (models.EvaluateQuizResponse, error) {
+func (qs *QuizService) EvaluateQuiz(sessionId uuid.UUID, submission []models.QuestionSubmission) (models.EvaluateQuizResponse, error) {
 	isActive, err := qs.ss.IsSessionActive(sessionId, time.Now())
 	if err != nil {
 		return models.EvaluateQuizResponse{}, &types.ErrSessionNotFound{SessionID: sessionId}
@@ -34,13 +34,13 @@ func (qs *QuizService) EvaluateQuiz(sessionId uuid.UUID, submission []models.Pro
 	questionResponses := make([]models.QuestionResponse, len(submission))
 	score := 0
 	for i, s := range submission {
-		matchingProblem, err := qs.ds.GetProblemById(s.Id)
+		matchingProblem, err := qs.ds.GetProblemById(s.QuestionId)
 		if err != nil {
-			return models.EvaluateQuizResponse{}, &types.ErrProblemNotFound{ProblemId: s.Id}
+			return models.EvaluateQuizResponse{}, &types.ErrProblemNotFound{ProblemId: s.QuestionId}
 		}
-		correct := s.Answer == matchingProblem.Answer
+		correct := strings.EqualFold(s.Answer, matchingProblem.Answer)
 		questionResponses[i] = models.QuestionResponse{
-			Id:      s.Id,
+			Id:      s.QuestionId,
 			Answer:  matchingProblem.Answer,
 			Correct: correct,
 		}
@@ -48,6 +48,7 @@ func (qs *QuizService) EvaluateQuiz(sessionId uuid.UUID, submission []models.Pro
 			score++
 		}
 	}
+
 	return models.EvaluateQuizResponse{
 		Score:   score,
 		Answers: questionResponses,

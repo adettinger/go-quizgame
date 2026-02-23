@@ -134,7 +134,9 @@ func (ds *DataStore) GetQuestions() []models.Question {
 	for i, p := range ds.problems {
 		questions[i] = models.Question{
 			Id:       p.Id,
+			Type:     p.Type,
 			Question: p.Question,
+			Choices:  p.Choices,
 		}
 	}
 	return questions
