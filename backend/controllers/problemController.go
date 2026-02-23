@@ -73,7 +73,6 @@ func (wc ProblemController) AddProblem(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request"})
 		return
 	}
-	fmt.Printf("ProblemRequest: %v\n", problemRequest)
 
 	problem, err := wc.ds.AddProblem(problemRequest)
 	if err != nil {
@@ -83,6 +82,21 @@ func (wc ProblemController) AddProblem(c *gin.Context) {
 	}
 	c.JSON(http.StatusCreated, problem)
 }
+
+// func (wc ProblemController) EditProblem(c *gin.Context) {
+// 	var problemRequest models.EditProblemRequest
+// 	if err := c.BindJSON(&problemRequest); err != nil || problemRequest.Question == "" || problemRequest.Answer == "" {
+// 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request"})
+// 		return
+// 	}
+// 	fmt.Printf("ProblemRequest: %v\n", problemRequest)
+
+// 	problem, err := wc.ds.GetProblemById(problemRequest.Id)
+// 	if err != nil {
+// 		c.JSON(http.StatusNotFound, gin.H{"message": "Id does not exist"})
+// 		return
+// 	}
+// }
 
 func (wc ProblemController) SaveProblems(c *gin.Context) {
 	err := wc.ds.SaveProblems()

@@ -9,10 +9,12 @@ import (
 )
 
 // TODO: Update these tests
-var problems = []models.Problem{
-	{Id: uuid.MustParse("c620af48-3af0-4216-a229-65c539a00202"), Question: "1+2", Answer: "3"},
-	{Id: uuid.MustParse("60d1584a-9d09-4e2d-be5c-1150fafa454f"), Question: "2*2", Answer: "4"},
+var problems = map[uuid.UUID]models.Problem{
+	uuid.MustParse("c620af48-3af0-4216-a229-65c539a00202"): models.Problem{Id: uuid.MustParse("c620af48-3af0-4216-a229-65c539a00202"), Type: "text", Question: "1+2", Choices: []string{}, Answer: "3"},
+	uuid.MustParse("60d1584a-9d09-4e2d-be5c-1150fafa454f"): models.Problem{Id: uuid.MustParse("60d1584a-9d09-4e2d-be5c-1150fafa454f"), Type: "text", Question: "2*2", Choices: []string{}, Answer: "4"},
 }
+
+var uuids []uuid.UUID = []uuid.UUID{uuid.MustParse("c620af48-3af0-4216-a229-65c539a00202"), uuid.MustParse("60d1584a-9d09-4e2d-be5c-1150fafa454f")}
 
 var ds = DataStore{
 	fileName: "test",
@@ -23,7 +25,7 @@ var ds = DataStore{
 
 func TestProblemIdExists(t *testing.T) {
 	t.Run("UUID exists", func(t *testing.T) {
-		result := ds.problemIdExists(ds.problems[0].Id)
+		result := ds.problemIdExists(uuids[0])
 		AssertEquals(t, result, true)
 	})
 
@@ -35,9 +37,9 @@ func TestProblemIdExists(t *testing.T) {
 
 func TestGetProblemByID(t *testing.T) {
 	t.Run("Find UUID exists", func(t *testing.T) {
-		result, err := ds.GetProblemById(ds.problems[0].Id)
+		result, err := ds.GetProblemById(uuids[0])
 		AssertNoError(t, err)
-		AssertEquals(t, ds.problems[0].Id, result.Id)
+		AssertEquals(t, uuids[0], result.Id)
 	})
 
 	t.Run("UUID does not exist", func(t *testing.T) {

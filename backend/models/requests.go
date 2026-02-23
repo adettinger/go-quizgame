@@ -13,6 +13,14 @@ type CreateProblemRequest struct {
 	Answer   string
 }
 
+type EditProblemRequest struct {
+	Id uuid.UUID
+	Type     string
+	Question string
+	Choices  []string
+	Answer   string
+}
+
 type StartQuizResponse struct {
 	SessionId uuid.UUID
 	Timeout   time.Time
