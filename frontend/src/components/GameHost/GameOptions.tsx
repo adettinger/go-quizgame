@@ -27,7 +27,7 @@ export function GameOptions() {
     };
 
     return (
-        <Form.Root onSubmit={handleSubmit}>
+        <Form.Root onSubmit={handleSubmit} onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}>
             <Flex direction="column" justify={"center"} align={"center"} gap="3">
                 {/* Time limit on questions */}
                 <Form.Field name="timeLimit">

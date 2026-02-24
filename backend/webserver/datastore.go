@@ -155,7 +155,7 @@ func (ds *DataStore) GetQuestions() []models.Question {
 	defer ds.mu.RUnlock()
 
 	// Return a copy to prevent external modification TODO: Needed?
-	questions := make([]models.Question, 0, len(ds.problems))
+	questions := make([]models.Question, len(ds.problems))
 	index := 0
 	for _, p := range ds.problems {
 		questions[index] = models.Question{

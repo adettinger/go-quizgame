@@ -87,7 +87,7 @@ export function CreateProblemForm() {
     };
 
     return (
-        <Form.Root onSubmit={handleSubmit}>
+        <Form.Root onSubmit={handleSubmit} onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}>
             <Flex direction={"column"} gap="3">
                 <Form.Field name="Type">
                     <Form.Label>Type: </Form.Label>

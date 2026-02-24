@@ -145,7 +145,7 @@ export function Game() {
             {score >= 0 &&
                 <Text>Score: {score}</Text>
             }
-            <Form.Root onSubmit={handleSubmit}>
+            <Form.Root onSubmit={handleSubmit} onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}>
                 <Flex direction={"column"} gap="3" justify="center">
 
                     <Flex direction="column" gap="3">
