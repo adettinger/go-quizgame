@@ -1,7 +1,7 @@
 import { Button, DataList, DropdownMenu, Flex } from "@radix-ui/themes";
 import { useNavigate, useParams } from "react-router-dom";
 import { useProblem } from "../../hooks/useProblem";
-import { TrashIcon } from "@radix-ui/react-icons";
+import { Pencil1Icon, TrashIcon } from "@radix-ui/react-icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteProblemById } from "../../services/problemService";
 import { useToast } from "../Toast/ToastContext";
@@ -26,6 +26,7 @@ export function ViewProblem() {
         },
         onError: (error) => {
             console.log('Failed to delete problem', error)
+            showToast('error', "Error", "Failed to delete problem");
         },
     })
 
@@ -33,6 +34,10 @@ export function ViewProblem() {
         if (confirm('Are you sure you want to delete this problem?')) {
             deleteMutation.mutate(id);
         }
+    }
+
+    const handleEdit = (id: string) => {
+        navigate(`/problem/edit/${id}`)
     }
 
     if (isLoading) {
@@ -89,6 +94,13 @@ export function ViewProblem() {
                     <DataList.Value>{problem.Answer}</DataList.Value>
                 </DataList.Item>
             </DataList.Root>
+            <Button
+                color="indigo"
+                onClick={() => { handleEdit(problem.Id) }}
+            >
+                Edit
+                <Pencil1Icon />
+            </Button>
             <Button
                 color="red"
                 onClick={() => { handleDelete(problem.Id) }}

@@ -12,6 +12,7 @@ import { ToastProvider } from './components/Toast/ToastContext';
 import { QuizPage } from './pages/QuizPage';
 import { GameHostPage } from './pages/GameHost';
 import { GamePlayerPage } from './pages/GamePlayerPage';
+import { EditProblemPage } from './pages/EditProblemPage';
 
 function App() {
 
@@ -31,6 +32,7 @@ function App() {
                 <Route path="/*" element={<NotFound />} />
                 <Route path="/problems" element={<ProblemsPage />} />
                 <Route path="/problem/:id" element={<ViewProblemPage />} />
+                <Route path="/problem/edit/:id" element={<EditProblemPage />} />
                 <Route path="/problem/new" element={<CreateProblemPage />} />
                 <Route path="/quiz" element={<QuizPage />} />
                 <Route path="/game/host" element={<GameHostPage />} />

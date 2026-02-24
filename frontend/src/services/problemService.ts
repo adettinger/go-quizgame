@@ -46,14 +46,14 @@ export async function fetchProblemById(id: string): Promise<Problem> {
 }
 
 // TODO: Move interfaces
-interface ProblemFormData {
+interface CreateProblemFormData {
     Type: ProblemType,
     Question: string;
     Answer: string;
     Choices: string[];
 }
 
-export async function createProblem(data: ProblemFormData): Promise<Problem> {
+export async function createProblem(data: CreateProblemFormData): Promise<Problem> {
     const response = await fetch(`${API_URL}/problem`, {
         method: 'POST',
         headers: {
@@ -67,6 +67,30 @@ export async function createProblem(data: ProblemFormData): Promise<Problem> {
     }
 
     return response.json();
+};
+
+interface EditProblemFormData {
+    Id: string;
+    Type: ProblemType,
+    Question: string;
+    Answer: string;
+    Choices: string[];
+}
+
+export async function editProblem(data: EditProblemFormData) {
+    const response = await fetch(`${API_URL}/problem/edit`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+        throw new Error(`Error creating problem: ${response.status}`);
+    }
+
+    return;
 };
 
 export async function submitQuiz(data: QuizSubmission): Promise<SubmitQuizResponse> {

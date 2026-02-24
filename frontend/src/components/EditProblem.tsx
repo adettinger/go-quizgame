@@ -1,24 +1,22 @@
-import { Button, DropdownMenu, Flex, Text, Tooltip } from "@radix-ui/themes";
-import * as Form from "@radix-ui/react-form";
-import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createProblem } from "../services/problemService";
-import './Toast/ToastStyles.scss';
+import { getEnumKeyByValue, MAX_PROBLEM_CHOICES, ProblemType } from "../types/problem";
 import { useToast } from "./Toast/ToastContext";
-import { Link } from "react-router-dom";
-import { getEnumKeyByValue, MAX_PROBLEM_CHOICES, ProblemType, type Problem } from "../types/problem";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { useProblem } from "../hooks/useProblem";
+import { useEffect, useState } from "react";
+import * as Form from "@radix-ui/react-form";
+import { Button, DropdownMenu, Flex, Text, Tooltip } from "@radix-ui/themes";
+import type { workingProblem } from "./CreateProblemForm";
 import { EditChoicesTable } from "./EditChoices";
+import { editProblem } from "../services/problemService";
 
-export interface workingProblem {
-    Type: ProblemType;
-    Question: string;
-    Choices: string[];
-    Answer: string;
-}
-
-export function CreateProblemForm() {
+export function EditProblem() {
+    const navigate = useNavigate();
     const queryClient = useQueryClient();
     const { showToast } = useToast();
+    const { id } = useParams<{ id: string }>();
+    const { data: initProblem, isLoading, isError, error } = useProblem(id || '');
+
     const [formValues, setFormValues] = useState<workingProblem>({
         Type: ProblemType.Text,
         Question: "",
@@ -26,20 +24,51 @@ export function CreateProblemForm() {
         Answer: "",
     });
 
+    useEffect(() => {
+        if (!isLoading && !!initProblem) {
+            setFormValues(initProblem);
+        }
+    }, [initProblem]);
+
     const mutation = useMutation({
-        mutationFn: createProblem,
+        mutationFn: editProblem,
 
-        onSuccess: (problem: Problem) => {
-            queryClient.invalidateQueries({ queryKey: ['problems'] })
-            setFormValues({ Type: ProblemType.Text, Question: "", Choices: [], Answer: "" })
-            showToast('success', "Success", <>Created problem <Link to={`/problem/${problem.Id}`}>{problem.Id}</Link> successfully</>);
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['problems'] });
+            queryClient.invalidateQueries({ queryKey: ['problem', id] });
+            showToast('success', "Success", <>Edited problem <Link to={`/problem/${id}`}>{id}</Link> successfully</>);
+            navigate(`/problem/${id}`);
+            // TODO: Instead of navigating away, refresh this page
         },
 
-        onError: () => {
-            console.log("Request to create new problem failed")
-            showToast('error', "Error", "Failed to create problem");
+        onError: (error) => {
+            console.log('Failed to edit problem', error);
+            showToast('error', "Error", "Failed to edit problem");
         },
-    })
+    });
+
+    const handleSubmit = async (event: any) => {
+        event.preventDefault();
+
+        if (!id) {
+            showToast('error', "Error", "Cannot save. Missing ID");
+            return;
+        }
+
+        console.log('Submitting new problem with data:', {
+            Question: formValues.Question,
+            Answer: formValues.Answer,
+        });
+
+        mutation.mutate({
+            Id: id,
+            Type: formValues.Type,
+            Question: formValues.Question.trim(),
+            Answer: formValues.Answer.trim(),
+            // TODO: Clean all the choices
+            Choices: formValues.Type === ProblemType.Text ? [] : formValues.Choices,
+        })
+    }
 
     const areAllFieldsValid = () => {
         // TODO: Only allow certain chars in fields
@@ -61,25 +90,25 @@ export function CreateProblemForm() {
             if (!formValues.Choices.some(choice => choice.toLowerCase() === formValues.Answer.toLowerCase())) {
                 return false
             }
+            // No duplicate choices
+            if (new Set(formValues.Choices).size !== formValues.Choices.length) {
+                return false
+            }
         }
+
         return true;
     }
 
-    const handleSubmit = async (event: any) => {
-        event.preventDefault();
+    if (isError) {
+        return (
+            <Text className="text-center p-4 text-red-600">
+                Error loading problem: {error.message}
+            </Text>
+        );
+    }
 
-        console.log('Submitting new problem with data:', {
-            Question: formValues.Question,
-            Answer: formValues.Answer,
-        });
-
-        mutation.mutate({
-            Type: formValues.Type,
-            Question: formValues.Question.trim(),
-            Answer: formValues.Answer.trim(),
-            // TODO: Clean all the choices
-            Choices: formValues.Type === ProblemType.Text ? [] : formValues.Choices,
-        })
+    if (isLoading) {
+        return <Text className="text-center p-4">Loading problem...</Text>;
     }
 
     const setType = (type: ProblemType) => {
@@ -88,7 +117,7 @@ export function CreateProblemForm() {
 
     return (
         <Form.Root onSubmit={handleSubmit}>
-            <Flex direction={"column"} gap="3">
+            <Flex direction="column" gap="3">
                 <Form.Field name="Type">
                     <Form.Label>Type: </Form.Label>
                     <DropdownMenu.Root>
@@ -152,10 +181,10 @@ export function CreateProblemForm() {
                                 <Text>{`Can have at most ${MAX_PROBLEM_CHOICES} choices`}</Text>
                             </Flex>
                     }>
-                        <Button disabled={!areAllFieldsValid()} style={{ alignSelf: 'center' }}>Post a question</Button>
+                        <Button disabled={!areAllFieldsValid() || mutation.isPending} style={{ alignSelf: 'center' }}>Edit question</Button>
                     </Tooltip>
                 </Form.Submit>
             </Flex>
-        </Form.Root >
+        </Form.Root>
     );
-};
+}

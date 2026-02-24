@@ -1,13 +1,14 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useProblems } from '../hooks/useProblems';
 import { Button, DropdownMenu, Flex, IconButton, Table } from "@radix-ui/themes"
-import { TrashIcon } from '@radix-ui/react-icons';
+import { Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { deleteProblemById } from '../services/problemService';
 import { useToast } from './Toast/ToastContext';
 import { ProblemType } from '../types/problem';
 
 export function ProblemList() {
+    const navigate = useNavigate();
     const queryClient = useQueryClient();
     const { showToast } = useToast();
     const { data, isLoading, isError, error } = useProblems();
@@ -85,14 +86,25 @@ export function ProblemList() {
                             </Table.Cell>
                             <Table.Cell>{problem.Answer}</Table.Cell>
                             <Table.Cell>
-                                <IconButton
-                                    color="red"
-                                    variant="soft"
-                                    onClick={() => { handleDelete(problem.Id) }}
-                                    disabled={deleteMutation.isPending}
-                                >
-                                    <TrashIcon />
-                                </IconButton>
+                                <Flex gap="2">
+
+                                    <IconButton
+                                        color="indigo"
+                                        variant="soft"
+                                        onClick={() => { navigate(`/problem/edit/${problem.Id}`) }}
+                                        disabled={deleteMutation.isPending}
+                                    >
+                                        <Pencil1Icon />
+                                    </IconButton>
+                                    <IconButton
+                                        color="red"
+                                        variant="soft"
+                                        onClick={() => { handleDelete(problem.Id) }}
+                                        disabled={deleteMutation.isPending}
+                                    >
+                                        <TrashIcon />
+                                    </IconButton>
+                                </Flex>
                             </Table.Cell>
                         </Table.Row>
                     ))}
