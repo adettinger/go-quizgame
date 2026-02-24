@@ -14,6 +14,7 @@ import { GameHostPage } from './pages/GameHost';
 import { GamePlayerPage } from './pages/GamePlayerPage';
 import { EditProblemPage } from './pages/EditProblemPage';
 import Banner from './components/Banner/Banner';
+import { LegalText } from './components/LegalText';
 
 function App() {
 
@@ -38,6 +39,7 @@ function App() {
                 <Route path="/game/player" element={<GamePlayerPage />} />
               </Routes>
             </div>
+            <LegalText />
           </Theme>
         </div>
       </ToastProvider>
