@@ -13,6 +13,7 @@ import { QuizPage } from './pages/QuizPage';
 import { GameHostPage } from './pages/GameHost';
 import { GamePlayerPage } from './pages/GamePlayerPage';
 import { EditProblemPage } from './pages/EditProblemPage';
+import Banner from './components/Banner/Banner';
 
 function App() {
 
@@ -23,9 +24,7 @@ function App() {
           <Theme>
             <NavBar />
             <div className="container mt-4">
-              <div className='App-header'>
-                <h1>Quizgame</h1>
-              </div>
+              <Banner />
 
               <Routes>
                 <Route path="/" element={<Welcome />} />
