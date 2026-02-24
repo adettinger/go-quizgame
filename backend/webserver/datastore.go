@@ -107,35 +107,35 @@ func (ds *DataStore) AddProblem(pr models.CreateProblemRequest) (models.Problem,
 	return problem, nil
 }
 
-// func (ds *DataStore) Edit(pr models.EditProblemRequest) (models.Problem, error) {
-// 	problemType, err := models.ParseProblemType(pr.Type)
-// 	if err != nil {
-// 		return models.Problem{}, err
-// 	}
-// 	if err = models.ValidateChoices(problemType, pr.Choices, pr.Answer); err != nil {
-// 		return models.Problem{}, err
-// 	}
-// 	if pr.Question == "" {
-// 		return models.Problem{}, errors.New("Question cannot be empty string")
-// 	}
-// 	if pr.Answer == "" {
-// 		return models.Problem{}, errors.New("Answer canot be empty string")
-// 	}
+func (ds *DataStore) EditProblem(pr models.EditProblemRequest) error {
+	problemType, err := models.ParseProblemType(pr.Type)
+	if err != nil {
+		return err
+	}
+	if err = models.ValidateChoices(problemType, pr.Choices, pr.Answer); err != nil {
+		return err
+	}
+	if pr.Question == "" {
+		return errors.New("Question cannot be empty string")
+	}
+	if pr.Answer == "" {
+		return errors.New("Answer canot be empty string")
+	}
 
-// 	problem := models.Problem{
-// 		Id:       pr.Id,
-// 		Type:     problemType,
-// 		Question: pr.Question,
-// 		Choices:  pr.Choices,
-// 		Answer:   pr.Answer,
-// 	}
-// 	ds.mu.Lock()
-// 	defer ds.mu.Unlock()
+	problem := models.Problem{
+		Id:       pr.Id,
+		Type:     problemType,
+		Question: pr.Question,
+		Choices:  pr.Choices,
+		Answer:   pr.Answer,
+	}
+	ds.mu.Lock()
+	defer ds.mu.Unlock()
 
-// 	ds.problems = append(ds.problems, problem)
-// 	ds.modified = true
-// 	return problem, nil
-// }
+	ds.problems[pr.Id] = problem
+	ds.modified = true
+	return nil
+}
 
 func (ds *DataStore) SaveProblems() error {
 	ds.mu.RLock()

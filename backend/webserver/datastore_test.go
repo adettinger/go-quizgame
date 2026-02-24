@@ -10,11 +10,19 @@ import (
 
 // TODO: Update these tests
 var problems = map[uuid.UUID]models.Problem{
-	uuid.MustParse("c620af48-3af0-4216-a229-65c539a00202"): models.Problem{Id: uuid.MustParse("c620af48-3af0-4216-a229-65c539a00202"), Type: "text", Question: "1+2", Choices: []string{}, Answer: "3"},
-	uuid.MustParse("60d1584a-9d09-4e2d-be5c-1150fafa454f"): models.Problem{Id: uuid.MustParse("60d1584a-9d09-4e2d-be5c-1150fafa454f"), Type: "text", Question: "2*2", Choices: []string{}, Answer: "4"},
+	uuid.MustParse("c620af48-3af0-4216-a229-65c539a00202"): {Id: uuid.MustParse("c620af48-3af0-4216-a229-65c539a00202"), Type: "text", Question: "1+2", Choices: []string{}, Answer: "3"},
+	uuid.MustParse("60d1584a-9d09-4e2d-be5c-1150fafa454f"): {Id: uuid.MustParse("60d1584a-9d09-4e2d-be5c-1150fafa454f"), Type: "text", Question: "2*2", Choices: []string{}, Answer: "4"},
 }
 
-var uuids []uuid.UUID = []uuid.UUID{uuid.MustParse("c620af48-3af0-4216-a229-65c539a00202"), uuid.MustParse("60d1584a-9d09-4e2d-be5c-1150fafa454f")}
+var uuids []uuid.UUID = func() []uuid.UUID {
+	toReturn := make([]uuid.UUID, len(problems))
+	i := 0
+	for k, _ := range problems {
+		toReturn[i] = k
+		i++
+	}
+	return toReturn
+}()
 
 var ds = DataStore{
 	fileName: "test",
@@ -25,6 +33,7 @@ var ds = DataStore{
 
 func TestProblemIdExists(t *testing.T) {
 	t.Run("UUID exists", func(t *testing.T) {
+		AssertEquals(t, uuids[0], uuid.MustParse("c620af48-3af0-4216-a229-65c539a00202"))
 		result := ds.problemIdExists(uuids[0])
 		AssertEquals(t, result, true)
 	})

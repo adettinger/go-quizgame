@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -39,15 +40,25 @@ func ParseProblemType(s string) (ProblemType, error) {
 }
 
 func ValidateChoices(problemType ProblemType, choices []string, answer string) error {
-	if problemType == ProblemTypeChoice {
+	if answer == "" {
+		return errors.New("Answer cannot be empty string")
+	}
+
+	switch problemType {
+	case ProblemTypeChoice:
 		if len(choices) < 2 || len(choices) > MaxNumChoices {
 			return fmt.Errorf("Choice type must have at least 2 choices and at most %d choices", MaxNumChoices)
 		}
 		choiceFound := false
+		seen := make(map[string]struct{}, len(choices))
 		for _, c := range choices {
 			if c == "" {
-				return fmt.Errorf("Choice cannot be empty string")
+				return errors.New("Choice cannot be empty string")
 			}
+			if _, exists := seen[strings.ToLower(c)]; exists {
+				return fmt.Errorf("Duplicate choice found")
+			}
+			seen[strings.ToLower(c)] = struct{}{}
 			if strings.EqualFold(c, answer) {
 				choiceFound = true
 			}
@@ -55,9 +66,12 @@ func ValidateChoices(problemType ProblemType, choices []string, answer string) e
 		if !choiceFound {
 			return fmt.Errorf("Answer must be one of the choices")
 		}
-	}
-	if problemType == ProblemTypeText && len(choices) != 0 {
-		return fmt.Errorf("Text problems cannot have choices")
+	case ProblemTypeText:
+		if len(choices) != 0 {
+			return fmt.Errorf("Text problems cannot have choices")
+		}
+	default:
+		return fmt.Errorf("Invalid problem type; %v", problemType)
 	}
 	return nil
 }

@@ -45,6 +45,7 @@ func main() {
 	router.GET("/problem/:id", problemController.GetProblemById)
 	router.DELETE("/problem/:id", problemController.DeleteProblem)
 	router.POST("/problem", problemController.AddProblem)
+	router.POST("/problem/edit", problemController.EditProblem)
 	router.POST("/problem/save", problemController.SaveProblems)
 
 	// Quiz endpoints

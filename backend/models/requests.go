@@ -14,7 +14,7 @@ type CreateProblemRequest struct {
 }
 
 type EditProblemRequest struct {
-	Id uuid.UUID
+	Id       uuid.UUID
 	Type     string
 	Question string
 	Choices  []string
@@ -34,7 +34,7 @@ type QuestionSubmission struct {
 
 // TODO: Change request object
 type EvaluateQuizRequest struct {
-	SessionID uuid.UUID
+	SessionID           uuid.UUID
 	QuestionSubmissions []QuestionSubmission
 }
 
