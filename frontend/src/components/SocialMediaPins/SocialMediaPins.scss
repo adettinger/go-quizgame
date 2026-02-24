@@ -1,0 +1,11 @@
+.media-icon-container {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    z-index: 100;
+}
+
+.media-icon {
+    transition: 'transform 0.2s ease-in-out';
+    opacity: '0.8';
+}

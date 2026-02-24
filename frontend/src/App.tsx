@@ -15,6 +15,7 @@ import { GamePlayerPage } from './pages/GamePlayerPage';
 import { EditProblemPage } from './pages/EditProblemPage';
 import Banner from './components/Banner/Banner';
 import { LegalText } from './components/LegalText';
+import { SocialMediaPins } from './components/SocialMediaPins/SocialMediaPins';
 
 function App() {
 
@@ -40,6 +41,7 @@ function App() {
               </Routes>
             </div>
             <LegalText />
+            <SocialMediaPins />
           </Theme>
         </div>
       </ToastProvider>

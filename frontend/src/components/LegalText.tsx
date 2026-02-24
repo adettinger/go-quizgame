@@ -11,10 +11,10 @@ export function LegalText() {
                 opacity: 0.4,
                 padding: '1rem',
                 textAlign: 'center',
-                width: '100%',
                 position: 'absolute',
                 bottom: 0,
-                left: 0,
+                left: '50%',
+                transform: 'translateX(-50%)',
                 zIndex: 10,
                 marginTop: 'auto',
                 background: 'transparent'
