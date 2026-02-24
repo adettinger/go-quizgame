@@ -87,7 +87,6 @@ export function ProblemList() {
                             <Table.Cell>{problem.Answer}</Table.Cell>
                             <Table.Cell>
                                 <Flex gap="2">
-
                                     <IconButton
                                         color="indigo"
                                         variant="soft"
