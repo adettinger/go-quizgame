@@ -1,7 +1,7 @@
 import { Button, DropdownMenu, Flex, Text, TextField } from "@radix-ui/themes";
 import * as Form from "@radix-ui/react-form";
 import { useEffect, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { submitQuiz } from "../../services/problemService";
 import type { SubmitQuizResponse } from "../../types/responses";
 import { useToast } from "../Toast/ToastContext";
@@ -21,12 +21,39 @@ interface quizItems {
 }
 
 export function Game() {
-    const { data, isLoading, isError, error } = useStartQuiz();
+    // const { data, isLoading, isError, error } = useStartQuiz();
+    // const { showToast } = useToast();
+    // const [sessionID, setSessionID] = useState('');
+    // const [timeout, setTimeout] = useState<Date>();
+    // const [score, setScore] = useState(-1);
+    // const [quizItems, setQuizItems] = useState<quizItems[]>([]);
+
+    const queryClient = useQueryClient();
+
+    // Ensure refetchOnMount is set to true
+    const { data, isLoading, isError, error, refetch } = useStartQuiz();
+
     const { showToast } = useToast();
     const [sessionID, setSessionID] = useState('');
     const [timeout, setTimeout] = useState<Date>();
     const [score, setScore] = useState(-1);
     const [quizItems, setQuizItems] = useState<quizItems[]>([]);
+
+    const resetState = () => {
+        setSessionID('');
+        setTimeout(undefined);
+        setScore(-1);
+        setQuizItems([]);
+    };
+
+    // Reset state when component mounts
+    useEffect(() => {
+        // Cleanup function to invalidate the query when component unmounts
+        return () => {
+            resetState();
+            queryClient.invalidateQueries({ queryKey: ['startQuiz'] });
+        };
+    }, []); // Empty dependency array means this runs once on mount
 
     useEffect(() => {
         if (data) {

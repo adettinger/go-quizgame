@@ -1,5 +1,5 @@
 import React from 'react';
-import { GitHubLogoIcon, LinkedInLogoIcon, TwitterLogoIcon } from '@radix-ui/react-icons';
+import { GitHubLogoIcon, LinkedInLogoIcon } from '@radix-ui/react-icons';
 import { Flex, IconButton, Tooltip } from '@radix-ui/themes';
 import './SocialMediaPins.scss'
 
@@ -20,11 +20,6 @@ export function SocialMediaPins() {
             name: 'LinkedIn',
             url: 'https://www.linkedin.com/in/alex-dettinger/',
             icon: <LinkedInLogoIcon width={20} height={20} />,
-        },
-        {
-            name: 'Twitter',
-            url: 'https://twitter.com/yourusername',
-            icon: <TwitterLogoIcon width={20} height={20} />,
         },
         // Add more social media platforms as needed
     ];

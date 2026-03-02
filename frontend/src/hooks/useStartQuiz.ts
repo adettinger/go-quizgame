@@ -6,5 +6,7 @@ export function useStartQuiz() {
     return useQuery<StartQuizResponse, Error>({
         queryKey: ['startQuiz'],
         queryFn: startQuiz,
+        refetchOnMount: true,
+        staleTime: 0,
     });
 }

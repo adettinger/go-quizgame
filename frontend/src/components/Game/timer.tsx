@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { differenceInSeconds } from 'date-fns';
 import { Card, Flex, Text } from '@radix-ui/themes';
 
@@ -12,15 +12,24 @@ export function CountdownTimer(
 ) {
     const [secondsLeft, setSecondsLeft] = useState<number>(0);
     const [isExpired, setIsExpired] = useState<boolean>(false);
+    const intervalIdRef = useRef<number | null>(null);
 
     useEffect(() => {
+        setIsExpired(false);
         const targetDate = props.deadline instanceof Date ? props.deadline : new Date(props.deadline);
         const now = new Date();
 
         const initialSecondsLeft = Math.max(0, differenceInSeconds(targetDate, now));
         setSecondsLeft(initialSecondsLeft);
 
-        const intervalId = setInterval(() => {
+        // If already expired on mount, do nothing
+        if (initialSecondsLeft <= 0) {
+            setIsExpired(true);
+            // if (props.onExpire) props.onExpire();
+            return; // Don't start the timer if alrea   dy expired
+        }
+
+        intervalIdRef.current = setInterval(() => {
             const now = new Date();
             const remaining = Math.max(0, differenceInSeconds(targetDate, now));
 
@@ -29,13 +38,27 @@ export function CountdownTimer(
             if (remaining <= 0 && !isExpired) {
                 setIsExpired(true);
                 if (props.onExpire) props.onExpire();
-                clearInterval(intervalId);
+
+                // Clear the interval when expired
+                if (intervalIdRef.current !== null) {
+                    clearInterval(intervalIdRef.current);
+                    intervalIdRef.current = null;
+                }
             }
         }, 1000);
 
-        // Clean up
-        return () => clearInterval(intervalId);
-    }, [props.deadline, props.onExpire, isExpired]);
+        // Clean up function that runs when component unmounts
+        return () => {
+            if (intervalIdRef.current !== null) {
+                clearInterval(intervalIdRef.current);
+                intervalIdRef.current = null;
+            }
+        };
+    }, [props.deadline]);
+
+    // useEffect(() => {
+
+    // }, [props.onExpire]);
 
     const formatTimeRemaining = () => {
         if (isExpired) return "Time's up!";

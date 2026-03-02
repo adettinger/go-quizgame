@@ -11,12 +11,8 @@ export function LegalText() {
                 opacity: 0.4,
                 padding: '1rem',
                 textAlign: 'center',
-                position: 'absolute',
-                bottom: 0,
-                left: '50%',
-                transform: 'translateX(-50%)',
+                position: 'relative',
                 zIndex: 10,
-                marginTop: 'auto',
                 background: 'transparent'
             }}
         >
