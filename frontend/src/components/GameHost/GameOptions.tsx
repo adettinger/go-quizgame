@@ -10,7 +10,6 @@ export function GameOptions() {
     const [isHostAPlayer, setIsHostAPlayer] = useState(false);
     const [selectedQuestionIds, setSelectedQuestionIds] = useState<string[]>([]);
 
-
     const areAllFieldsValid = (): boolean => {
         if (
             parseInt(questionTimeLimit, 10) >= 0 &&

@@ -1,8 +1,8 @@
-import { Flex, IconButton, Table, Text } from "@radix-ui/themes";
+import { Flex, Text } from "@radix-ui/themes";
 import type { Problem } from "../../types/problem";
-import { Cross1Icon, PlusIcon } from "@radix-ui/react-icons";
 import React, { useEffect, useState } from "react";
 import { useProblems } from "../../hooks/useProblems";
+import { ProblemTable } from "../ProblemTable";
 
 export interface ProblemPickerProps {
     setQuestionIds: (questionIds: string[]) => void;
@@ -15,7 +15,7 @@ export const ProblemPicker = React.memo(function ({ setQuestionIds }: ProblemPic
     const [selectedQuestions, setSelectedQuestions] = useState<Problem[]>([]);
 
     useEffect(() => {
-        if (!!data && data.length > 0 && availableQuestions.length === 0 && selectedQuestions.length === 0) {
+        if (!!data && data.length > 0) {
             setAvailableQuestions(data);
         }
     }, [data]);
@@ -24,14 +24,14 @@ export const ProblemPicker = React.memo(function ({ setQuestionIds }: ProblemPic
         setQuestionIds(selectedQuestions.map(problem => problem.Id))
     }, [selectedQuestions])
 
-    const selectQuestion = (questionToAdd: Problem) => {
-        setSelectedQuestions(prev => [...prev, questionToAdd]);
-        setAvailableQuestions(prev => prev.filter(question => question.Id !== questionToAdd.Id));
+    const selectQuestion = (problem: Problem) => {
+        setSelectedQuestions(prev => [...prev, problem]);
+        setAvailableQuestions(prev => prev.filter(question => question.Id !== problem.Id));
     };
 
-    const deselectQuestion = (questionToRemove: Problem) => {
-        setSelectedQuestions(prev => prev.filter(question => question.Id !== questionToRemove.Id));
-        setAvailableQuestions(prev => [...prev, questionToRemove]);
+    const deselectQuestion = (problem: Problem) => {
+        setSelectedQuestions(prev => prev.filter(question => question.Id !== problem.Id));
+        setAvailableQuestions(prev => [...prev, problem]);
     };
 
     if (isLoading) {
@@ -56,67 +56,24 @@ export const ProblemPicker = React.memo(function ({ setQuestionIds }: ProblemPic
             {selectedQuestions.length === 0 ?
                 <Text>No Questions Selected</Text>
                 :
-                // TODO: Rendering longer questions?
-                <Table.Root variant="surface" style={{ width: '100%' }}>
-                    <Table.Header>
-                        <Table.Row>
-                            <Table.ColumnHeaderCell>Question</Table.ColumnHeaderCell>
-                            <Table.ColumnHeaderCell>Answer</Table.ColumnHeaderCell>
-                            <Table.ColumnHeaderCell>Actions</Table.ColumnHeaderCell>
-                        </Table.Row>
-                    </Table.Header>
+                <ProblemTable
+                    Problems={selectedQuestions}
+                    ShowIds={false}
+                    OnRemove={deselectQuestion}
 
-                    <Table.Body>
-                        {selectedQuestions.map((question) => (
-                            <Table.Row key={question.Id}>
-                                <Table.Cell>{question.Question}</Table.Cell>
-                                <Table.Cell>{question.Answer}</Table.Cell>
-                                <Table.Cell>
-                                    <IconButton
-                                        color="red"
-                                        variant="soft"
-                                        onClick={() => { deselectQuestion(question) }}
-                                    >
-                                        <Cross1Icon />
-                                    </IconButton>
-                                </Table.Cell>
-                            </Table.Row>
-                        ))}
-                    </Table.Body>
-                </Table.Root>
+                />
             }
 
             <h3>Available Questions</h3>
             {availableQuestions.length === 0 ?
                 <Text>No available questions remaining</Text>
                 :
-                <Table.Root variant="surface" style={{ width: '100%' }}>
-                    <Table.Header>
-                        <Table.Row>
-                            <Table.ColumnHeaderCell>Question</Table.ColumnHeaderCell>
-                            <Table.ColumnHeaderCell>Answer</Table.ColumnHeaderCell>
-                            <Table.ColumnHeaderCell>Actions</Table.ColumnHeaderCell>
-                        </Table.Row>
-                    </Table.Header>
+                <ProblemTable
+                    Problems={availableQuestions}
+                    ShowIds={false}
+                    OnAdd={selectQuestion}
 
-                    <Table.Body>
-                        {availableQuestions.map((question) => (
-                            <Table.Row key={question.Id}>
-                                <Table.Cell>{question.Question}</Table.Cell>
-                                <Table.Cell>{question.Answer}</Table.Cell>
-                                <Table.Cell>
-                                    <IconButton
-                                        color="blue"
-                                        variant="soft"
-                                        onClick={() => { selectQuestion(question) }}
-                                    >
-                                        <PlusIcon />
-                                    </IconButton>
-                                </Table.Cell>
-                            </Table.Row>
-                        ))}
-                    </Table.Body>
-                </Table.Root>
+                />
             }
         </Flex>
     );

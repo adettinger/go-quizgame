@@ -63,8 +63,8 @@ export function ProblemForm({ formValues, setFormValues, onSubmit, submitDisable
                             <Button color='gray' variant='soft'>{getEnumKeyByValue(ProblemType, formValues.Type)}<DropdownMenu.TriggerIcon /></Button>
                         </DropdownMenu.Trigger>
                         <DropdownMenu.Content color="gray" variant='soft'>
-                            {Object.keys(ProblemType).map((type, index) => (
-                                <DropdownMenu.Item key={index} onClick={() => setType(ProblemType[type as keyof typeof ProblemType])}>{type}</DropdownMenu.Item>
+                            {Object.keys(ProblemType).map((type) => (
+                                <DropdownMenu.Item key={type} onClick={() => setType(ProblemType[type as keyof typeof ProblemType])}>{type}</DropdownMenu.Item>
                             ))}
                         </DropdownMenu.Content>
                     </DropdownMenu.Root>

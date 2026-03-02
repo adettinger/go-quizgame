@@ -176,8 +176,8 @@ export function Game() {
                 <Flex direction={"column"} gap="3" justify="center">
 
                     <Flex direction="column" gap="3">
-                        {quizItems?.map((problem, index) => (
-                            <Form.Field key={index} name={`Question-${problem.Id}`}>
+                        {quizItems?.map((problem) => (
+                            <Form.Field key={problem.Id} name={`Question-${problem.Id}`}>
                                 <Flex direction={"column"} gap="1">
                                     <Form.Label>{problem.Question}</Form.Label>
                                     <div>

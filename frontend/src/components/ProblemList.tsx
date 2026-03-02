@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { deleteProblemById } from '../services/problemService';
 import { useToast } from './Toast/ToastContext';
 import { ProblemType } from '../types/problem';
+import { ProblemTable } from './ProblemTable';
 
 export function ProblemList() {
     const navigate = useNavigate();
@@ -48,67 +49,23 @@ export function ProblemList() {
         return <div className="text-center p-4">No problems found.</div>;
     }
 
+    const handleEdit = (id: string) => {
+        navigate(`/problem/edit/${id}`);
+    };
+
+
     return (
         <Flex align="center" justify="center">
-            <Table.Root variant="surface">
-                <Table.Header>
-                    <Table.Row>
-                        <Table.ColumnHeaderCell>ID</Table.ColumnHeaderCell>
-                        <Table.ColumnHeaderCell>Type</Table.ColumnHeaderCell>
-                        <Table.ColumnHeaderCell>Question</Table.ColumnHeaderCell>
-                        <Table.ColumnHeaderCell>Choices</Table.ColumnHeaderCell>
-                        <Table.ColumnHeaderCell>Answer</Table.ColumnHeaderCell>
-                        <Table.ColumnHeaderCell>Actions</Table.ColumnHeaderCell>
-                    </Table.Row>
-                </Table.Header>
-
-                <Table.Body>
-                    {data.map((problem, index) => (
-                        <Table.Row key={index}>
-                            <Table.RowHeaderCell>
-                                <Link to={`/problem/${problem.Id}`}>{problem.Id}</Link>
-                            </Table.RowHeaderCell>
-                            <Table.Cell>{problem.Type}</Table.Cell>
-                            <Table.Cell>{problem.Question}</Table.Cell>
-                            <Table.Cell>
-                                {problem.Type === ProblemType.Choice &&
-                                    <DropdownMenu.Root>
-                                        <DropdownMenu.Trigger>
-                                            <Button color='gray' variant='soft'>Choices <DropdownMenu.TriggerIcon /></Button>
-                                        </DropdownMenu.Trigger>
-                                        <DropdownMenu.Content color="gray" variant='soft'>
-                                            {problem.Choices.map((choice, index) => (
-                                                <DropdownMenu.Item key={index}>{choice}</DropdownMenu.Item>
-                                            ))}
-                                        </DropdownMenu.Content>
-                                    </DropdownMenu.Root>
-                                }
-                            </Table.Cell>
-                            <Table.Cell>{problem.Answer}</Table.Cell>
-                            <Table.Cell>
-                                <Flex gap="2">
-                                    <IconButton
-                                        color="indigo"
-                                        variant="soft"
-                                        onClick={() => { navigate(`/problem/edit/${problem.Id}`) }}
-                                        disabled={deleteMutation.isPending}
-                                    >
-                                        <Pencil1Icon />
-                                    </IconButton>
-                                    <IconButton
-                                        color="red"
-                                        variant="soft"
-                                        onClick={() => { handleDelete(problem.Id) }}
-                                        disabled={deleteMutation.isPending}
-                                    >
-                                        <TrashIcon />
-                                    </IconButton>
-                                </Flex>
-                            </Table.Cell>
-                        </Table.Row>
-                    ))}
-                </Table.Body>
-            </Table.Root>
+            <ProblemTable
+                Problems={data}
+                IsLoading={isLoading}
+                IsError={isError}
+                Error={error}
+                ShowIds={true}
+                OnEdit={handleEdit}
+                OnDelete={handleDelete}
+                DisableActions={deleteMutation.isPending}
+            />
         </Flex>
     );
 }
