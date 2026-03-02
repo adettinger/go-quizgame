@@ -1,8 +1,7 @@
 import { Link } from 'react-router-dom';
-import { Button, DropdownMenu, Flex, IconButton, Table } from "@radix-ui/themes"
+import { Button, DropdownMenu, Flex, IconButton, Table, Text } from "@radix-ui/themes"
 import { Cross1Icon, Pencil1Icon, PlusIcon, TrashIcon } from '@radix-ui/react-icons';
 import { ProblemType, type Problem } from '../types/problem';
-import React from 'react';
 
 export interface ProblemTableProps {
     Problems: Problem[] | undefined,
@@ -61,7 +60,7 @@ export function ProblemTable(props: ProblemTableProps) {
                         {/* TODO: Rendering longer questions? */}
                         <Table.Cell>{problem.Question}</Table.Cell>
                         <Table.Cell>
-                            {problem.Type === ProblemType.Choice &&
+                            {problem.Type === ProblemType.Choice ?
                                 <DropdownMenu.Root>
                                     <DropdownMenu.Trigger>
                                         <Button color='gray' variant='soft'>Choices <DropdownMenu.TriggerIcon /></Button>
@@ -72,6 +71,8 @@ export function ProblemTable(props: ProblemTableProps) {
                                         ))}
                                     </DropdownMenu.Content>
                                 </DropdownMenu.Root>
+                                :
+                                <Text>N/A</Text>
                             }
                         </Table.Cell>
                         <Table.Cell>{problem.Answer}</Table.Cell>
