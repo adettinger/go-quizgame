@@ -2,6 +2,7 @@ package livegame
 
 import (
 	"errors"
+	"fmt"
 	"slices"
 	"sync"
 
@@ -14,13 +15,38 @@ type LivePlayer struct {
 	Name string
 }
 
+type GameStatus string
+
+const (
+	GameStatusNotSetup GameStatus = "not_setup"
+	GameStatusSetup    GameStatus = "setup"
+	GameStatusRunning  GameStatus = "running"
+	GameStatusDone     GameStatus = "done"
+)
+
 type LiveGameStore struct {
-	players []LivePlayer
-	mutex   sync.RWMutex
+	players         []LivePlayer
+	mutex           sync.RWMutex
+	currentQuestion int
+	timeLimit       int
+	questionIds     []uuid.UUID
+	gameStatus      GameStatus
 }
 
 func NewLiveGameStore() *LiveGameStore {
-	return &LiveGameStore{}
+	return &LiveGameStore{gameStatus: GameStatusNotSetup}
+}
+
+func (lgs *LiveGameStore) SetupGameOptions(timeLimit int, qIds []uuid.UUID) error {
+	lgs.mutex.Lock()
+	defer lgs.mutex.Unlock()
+	if lgs.gameStatus != GameStatusNotSetup && lgs.gameStatus != GameStatusDone {
+		return fmt.Errorf("Cannot setup game. Current status: %v", lgs.gameStatus)
+	}
+	lgs.timeLimit = timeLimit
+	lgs.questionIds = qIds
+	lgs.gameStatus = GameStatusSetup
+	return nil
 }
 
 func (lgs *LiveGameStore) AddPlayer(name string) (uuid.UUID, error) {

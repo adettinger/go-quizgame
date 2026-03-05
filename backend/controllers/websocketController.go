@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -12,9 +13,14 @@ import (
 	"github.com/adettinger/go-quizgame/socket"
 	"github.com/adettinger/go-quizgame/types"
 	"github.com/adettinger/go-quizgame/utils"
+	"github.com/adettinger/go-quizgame/webserver"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
+
+const QuestionTimeMin = 30
+const QuestionTimeMax = 120
 
 const PlayerNameMaxLength = 20
 
@@ -25,9 +31,9 @@ type WebSocketController struct {
 }
 
 // NewWebSocketController creates a new WebSocket controller
-func NewWebSocketController() *WebSocketController {
+func NewWebSocketController(qs *webserver.QuestionStore) *WebSocketController {
 	return &WebSocketController{
-		manager: socket.NewManager(),
+		manager: socket.NewManager(qs),
 		upgrader: websocket.Upgrader{
 			ReadBufferSize:  1024,
 			WriteBufferSize: 1024,
@@ -39,8 +45,96 @@ func NewWebSocketController() *WebSocketController {
 	}
 }
 
-// HandleConnection handles a new WebSocket connection
-func (wsc *WebSocketController) HandleConnection(c *gin.Context) {
+func (wsc *WebSocketController) HandleHostConnection(c *gin.Context) {
+	// read and validate game options
+	timeLimitParam := c.Query("timeLimit")
+	questionIdsParam := c.Query("questionIds")
+
+	if timeLimitParam == "" || questionIdsParam == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request"})
+		return
+	}
+	// Parse fields
+	timeLimit, err := strconv.Atoi(timeLimitParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request"})
+		return
+	}
+
+	questionIdsStrings := strings.Split(questionIdsParam, ",")
+	questionIds := make([]uuid.UUID, len(questionIdsStrings))
+	for index, idString := range questionIdsStrings {
+		id, err := uuid.Parse(idString)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request"})
+			return
+		}
+		questionIds[index] = id
+	}
+
+	// Validate options
+	if timeLimit < QuestionTimeMin || timeLimit > QuestionTimeMax {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request"})
+		return
+	}
+	if len(questionIds) < 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request"})
+		return
+	}
+	for _, id := range questionIds {
+		if !wsc.manager.QuestionStore.ProblemIdExists(id) {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request"})
+			return
+		}
+	}
+	// TODO: Check for duplicate question Ids
+
+	isWebSocketRequest := c.IsWebsocket() ||
+		(c.Request.Header.Get("Connection") == "Upgrade" &&
+			strings.ToLower(c.Request.Header.Get("Upgrade")) == "websocket")
+
+	if !isWebSocketRequest {
+		// This is a regular HTTP request, undo modifications and return success
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Game options are valid",
+		})
+		return
+	}
+	// Update liveGameStore with options
+	err = wsc.manager.LiveGameStore.SetupGameOptions(timeLimit, questionIds)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to setup game options"})
+		return
+	}
+
+	conn, err := wsc.upgrader.Upgrade(c.Writer, c.Request, nil)
+	if err != nil {
+		log.Printf("Failed to upgrade connection: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to upgrade connection"})
+		return
+	}
+
+	// Register as host
+	client := &socket.Client{
+		ID:       wsc.manager.CreateNewClientID(),
+		Conn:     conn,
+		Manager:  wsc.manager,
+		Send:     make(chan models.Message, 256),
+		UserData: socket.UserData{IsHost: true, Name: "Host", PlayerId: uuid.Nil},
+	}
+	log.Print("New Host Client created")
+
+	wsc.manager.Register <- client
+	client.Logf("New Host Client registered")
+
+	// Start goroutines for reading and writing
+	go wsc.readPump(client)
+	go wsc.writePump(client)
+	client.Logf("Host Read/Write pumps started")
+}
+
+// HandlePlayerConnection handles a new WebSocket connection
+func (wsc *WebSocketController) HandlePlayerConnection(c *gin.Context) {
 	log.Printf("=== NEW CONNECTION REQUEST ===")
 	log.Printf("Request path: %s", c.Request.URL.Path)
 	log.Printf("Request query: %s", c.Request.URL.RawQuery)

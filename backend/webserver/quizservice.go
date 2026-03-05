@@ -10,11 +10,11 @@ import (
 )
 
 type QuizService struct {
-	ds *DataStore
+	ds *QuestionStore
 	ss *SessionStore
 }
 
-func NewQuizService(ds *DataStore, ss *SessionStore) *QuizService {
+func NewQuizService(ds *QuestionStore, ss *SessionStore) *QuizService {
 	return &QuizService{
 		ds: ds,
 		ss: ss,

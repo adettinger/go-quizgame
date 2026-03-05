@@ -9,14 +9,14 @@ import (
 	"github.com/google/uuid"
 )
 
-type DataStore struct {
+type QuestionStore struct {
 	fileName string
 	problems map[uuid.UUID]models.Problem
 	mu       sync.RWMutex
 	modified bool
 }
 
-func NewDataStore(fileName string) (*DataStore, error) {
+func NewQuestionStore(fileName string) (*QuestionStore, error) {
 	problems, err := csv.ParseProblems(fileName)
 	if err != nil {
 		return nil, err
@@ -26,7 +26,7 @@ func NewDataStore(fileName string) (*DataStore, error) {
 		problemsMap[p.Id] = p
 	}
 
-	return &DataStore{
+	return &QuestionStore{
 		fileName: fileName,
 		problems: problemsMap,
 		mu:       sync.RWMutex{},
@@ -34,13 +34,13 @@ func NewDataStore(fileName string) (*DataStore, error) {
 	}, nil
 }
 
-func NewDataStoreFromData(problems []models.Problem) (*DataStore, error) {
+func NewDataStoreFromData(problems []models.Problem) (*QuestionStore, error) {
 	problemsMap := make(map[uuid.UUID]models.Problem, len(problems))
 	for _, p := range problems {
 		problemsMap[p.Id] = p
 	}
 
-	return &DataStore{
+	return &QuestionStore{
 		fileName: "ignore",
 		problems: problemsMap,
 		mu:       sync.RWMutex{},
@@ -48,11 +48,11 @@ func NewDataStoreFromData(problems []models.Problem) (*DataStore, error) {
 	}, nil
 }
 
-func (ds *DataStore) ListProblems() []models.Problem {
+func (ds *QuestionStore) ListProblems() []models.Problem {
 	return ds.problemsToArray()
 }
 
-func (ds *DataStore) GetProblemById(uuid uuid.UUID) (models.Problem, error) {
+func (ds *QuestionStore) GetProblemById(uuid uuid.UUID) (models.Problem, error) {
 	ds.mu.RLock()
 	defer ds.mu.RUnlock()
 
@@ -63,7 +63,7 @@ func (ds *DataStore) GetProblemById(uuid uuid.UUID) (models.Problem, error) {
 	return problem, nil
 }
 
-func (ds *DataStore) DeleteProblemByIndex(id uuid.UUID) error {
+func (ds *QuestionStore) DeleteProblemByIndex(id uuid.UUID) error {
 	ds.mu.Lock()
 	defer ds.mu.Unlock()
 
@@ -77,7 +77,7 @@ func (ds *DataStore) DeleteProblemByIndex(id uuid.UUID) error {
 }
 
 // TODO: Move validation into business logic component
-func (ds *DataStore) AddProblem(pr models.CreateProblemRequest) (models.Problem, error) {
+func (ds *QuestionStore) AddProblem(pr models.CreateProblemRequest) (models.Problem, error) {
 	problemType, err := models.ParseProblemType(pr.Type)
 	if err != nil {
 		return models.Problem{}, err
@@ -107,7 +107,7 @@ func (ds *DataStore) AddProblem(pr models.CreateProblemRequest) (models.Problem,
 	return problem, nil
 }
 
-func (ds *DataStore) EditProblem(pr models.EditProblemRequest) error {
+func (ds *QuestionStore) EditProblem(pr models.EditProblemRequest) error {
 	problemType, err := models.ParseProblemType(pr.Type)
 	if err != nil {
 		return err
@@ -137,7 +137,7 @@ func (ds *DataStore) EditProblem(pr models.EditProblemRequest) error {
 	return nil
 }
 
-func (ds *DataStore) SaveProblems() error {
+func (ds *QuestionStore) SaveProblems() error {
 	ds.mu.RLock()
 	defer ds.mu.RUnlock()
 	if !ds.modified {
@@ -150,7 +150,7 @@ func (ds *DataStore) SaveProblems() error {
 	return nil
 }
 
-func (ds *DataStore) GetQuestions() []models.Question {
+func (ds *QuestionStore) GetQuestions() []models.Question {
 	ds.mu.RLock()
 	defer ds.mu.RUnlock()
 
@@ -169,21 +169,21 @@ func (ds *DataStore) GetQuestions() []models.Question {
 	return questions
 }
 
-func (ds *DataStore) getNewId() uuid.UUID {
+func (ds *QuestionStore) getNewId() uuid.UUID {
 	for {
 		uuid := uuid.New()
-		if !ds.problemIdExists(uuid) {
+		if !ds.ProblemIdExists(uuid) {
 			return uuid
 		}
 	}
 }
 
-func (ds *DataStore) problemIdExists(uuid uuid.UUID) bool {
+func (ds *QuestionStore) ProblemIdExists(uuid uuid.UUID) bool {
 	_, err := ds.GetProblemById(uuid)
 	return err == nil
 }
 
-func (ds *DataStore) problemsToArray() []models.Problem {
+func (ds *QuestionStore) problemsToArray() []models.Problem {
 	ds.mu.RLock()
 	defer ds.mu.RUnlock()
 

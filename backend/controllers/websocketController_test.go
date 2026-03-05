@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/adettinger/go-quizgame/models"
+	"github.com/adettinger/go-quizgame/webserver"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
@@ -21,10 +22,10 @@ func TestHandleConnectionFull(t *testing.T) {
 
 	// Create a router with the websocket handler
 	router := gin.New()
-	controller := NewWebSocketController()
+	controller := NewWebSocketController(&webserver.QuestionStore{})
 
 	// Setup the route
-	router.GET("/ws/:playerName", controller.HandleConnection)
+	router.GET("/ws/:playerName", controller.HandlePlayerConnection)
 
 	// Create a test server
 	server := httptest.NewServer(router)
@@ -83,10 +84,10 @@ func TestHandleConnectionInvalidName(t *testing.T) {
 
 	// Create a router with the websocket handler
 	router := gin.New()
-	controller := NewWebSocketController()
+	controller := NewWebSocketController(&webserver.QuestionStore{})
 
 	// Setup the route
-	router.GET("/ws/:playerName", controller.HandleConnection)
+	router.GET("/ws/:playerName", controller.HandlePlayerConnection)
 
 	// Create a test server
 	server := httptest.NewServer(router)

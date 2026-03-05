@@ -13,7 +13,7 @@ import (
 
 func main() {
 	fmt.Println("Starting server...")
-	ds, err := webserver.NewDataStore("../../problems.csv")
+	ds, err := webserver.NewQuestionStore("../../problems.csv")
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -21,7 +21,7 @@ func main() {
 
 	problemController := controllers.NewProblemController(ds)
 	quizController := controllers.NewQuizController(ds)
-	wsController := controllers.NewWebSocketController()
+	wsController := controllers.NewWebSocketController(ds)
 
 	go wsController.GetManager().Start()
 
@@ -53,7 +53,8 @@ func main() {
 	router.GET("/quiz/start", quizController.StartQuiz)
 	router.POST("/quiz/submit", quizController.SubmitQuiz)
 
-	router.GET("/liveGame/player/:playerName", wsController.HandleConnection)
+	router.GET("/liveGame/player/:playerName", wsController.HandlePlayerConnection)
+	router.GET("/liveGame/host", wsController.HandleHostConnection)
 
 	router.Run("localhost:8080")
 }

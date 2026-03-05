@@ -7,6 +7,7 @@ import (
 	"github.com/adettinger/go-quizgame/mocks"
 	"github.com/adettinger/go-quizgame/models"
 	"github.com/adettinger/go-quizgame/socket"
+	"github.com/adettinger/go-quizgame/webserver"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
@@ -21,7 +22,7 @@ func TestClient_ErrorAndKill(t *testing.T) {
 	client := &socket.Client{
 		ID:      uuid.New(),
 		Conn:    mockConn,
-		Manager: socket.NewManager(),
+		Manager: socket.NewManager(&webserver.QuestionStore{}),
 		Send:    make(chan models.Message, 10),
 		UserData: socket.UserData{
 			PlayerId: uuid.New(),

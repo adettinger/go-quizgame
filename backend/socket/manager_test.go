@@ -9,6 +9,7 @@ import (
 	"github.com/adettinger/go-quizgame/models"
 	"github.com/adettinger/go-quizgame/socket"
 	"github.com/adettinger/go-quizgame/testutils"
+	"github.com/adettinger/go-quizgame/webserver"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
@@ -23,7 +24,7 @@ func createTestClient(t testing.TB, name string) *socket.Client {
 	return &socket.Client{
 		ID:      uuid.New(),
 		Conn:    mockConn,
-		Manager: socket.NewManager(),
+		Manager: socket.NewManager(&webserver.QuestionStore{}),
 		Send:    make(chan models.Message, testClientBufferSize),
 		UserData: socket.UserData{
 			PlayerId: uuid.New(),
@@ -33,32 +34,32 @@ func createTestClient(t testing.TB, name string) *socket.Client {
 }
 
 func TestNewManager(t *testing.T) {
-	manager := socket.NewManager()
+	manager := socket.NewManager(&webserver.QuestionStore{})
 
 	assert.NotNil(t, manager)
-	assert.NotNil(t, manager.Clients)
+	assert.NotNil(t, manager.PlayerCients)
 	assert.NotNil(t, manager.Register)
 	assert.NotNil(t, manager.Unregister)
 	assert.NotNil(t, manager.Broadcast)
 	assert.NotNil(t, manager.LiveGameStore)
-	assert.Equal(t, 0, manager.ClientCount())
+	assert.Equal(t, 0, manager.PlayerClientCount())
 }
 
 func TestManager_ClientCount(t *testing.T) {
-	manager := socket.NewManager()
+	manager := socket.NewManager(&webserver.QuestionStore{})
 
 	// Initially zero clients
-	assert.Equal(t, 0, manager.ClientCount())
+	assert.Equal(t, 0, manager.PlayerClientCount())
 
 	// Add a client
 	client := createTestClient(t, "testUser")
-	manager.Clients[client.ID] = client
+	manager.PlayerCients[client.ID] = client
 
-	assert.Equal(t, 1, manager.ClientCount())
+	assert.Equal(t, 1, manager.PlayerClientCount())
 }
 
 func TestManager_CreateNewClientID(t *testing.T) {
-	manager := socket.NewManager()
+	manager := socket.NewManager(&webserver.QuestionStore{})
 
 	// Create a new ID
 	id1 := manager.CreateNewClientID()
@@ -77,13 +78,13 @@ func TestManager_CreateNewClientID(t *testing.T) {
 }
 
 func TestManager_AddClient(t *testing.T) {
-	manager := socket.NewManager()
+	manager := socket.NewManager(&webserver.QuestionStore{})
 
 	// Can add client
 	client1 := createTestClient(t, "client1")
 	err := manager.AddClient(client1)
 	testutils.AssertNoError(t, err)
-	assert.Equal(t, 1, manager.ClientCount())
+	assert.Equal(t, 1, manager.PlayerClientCount())
 
 	// Cannot add duplicate id client
 	client2 := createTestClient(t, "client2")
@@ -94,25 +95,25 @@ func TestManager_AddClient(t *testing.T) {
 }
 
 func TestManager_ClientIDExists(t *testing.T) {
-	manager := socket.NewManager()
+	manager := socket.NewManager(&webserver.QuestionStore{})
 
 	// Create a client
 	client := createTestClient(t, "testUser")
-	manager.Clients[client.ID] = client
+	manager.PlayerCients[client.ID] = client
 
 	// Check if the client ID exists
-	assert.True(t, manager.ClientIDExists(client.ID))
+	assert.True(t, manager.PlayerClientIDExists(client.ID))
 
 	// Check if a non-existent ID exists
-	assert.False(t, manager.ClientIDExists(uuid.New()))
+	assert.False(t, manager.PlayerClientIDExists(uuid.New()))
 }
 
 func TestManager_SendToClient(t *testing.T) {
-	manager := socket.NewManager()
+	manager := socket.NewManager(&webserver.QuestionStore{})
 
 	// Create a client
 	client := createTestClient(t, "testUser")
-	manager.Clients[client.ID] = client
+	manager.PlayerCients[client.ID] = client
 
 	// Create a message
 	message := models.CreateMessage(
@@ -139,7 +140,7 @@ func TestManager_SendToClient(t *testing.T) {
 }
 
 func TestManager_BroadcastMessage(t *testing.T) {
-	manager := socket.NewManager()
+	manager := socket.NewManager(&webserver.QuestionStore{})
 
 	// Create a message
 	message := models.CreateMessage(
@@ -169,7 +170,7 @@ func TestManager_BroadcastMessage(t *testing.T) {
 }
 
 func TestManager_Start_Register(t *testing.T) {
-	manager := socket.NewManager()
+	manager := socket.NewManager(&webserver.QuestionStore{})
 
 	// Create a clients
 	client1 := createTestClient(t, "testUser")
@@ -185,8 +186,8 @@ func TestManager_Start_Register(t *testing.T) {
 	time.Sleep(1000 * time.Millisecond)
 
 	// Verify the client was registered
-	assert.Equal(t, 1, manager.ClientCount())
-	assert.True(t, manager.ClientIDExists(client1.ID))
+	assert.Equal(t, 1, manager.PlayerClientCount())
+	assert.True(t, manager.PlayerClientIDExists(client1.ID))
 
 	// Verify a join message was broadcast to client
 	select {
@@ -204,8 +205,8 @@ func TestManager_Start_Register(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Verify the client was registered
-	assert.Equal(t, 2, manager.ClientCount())
-	assert.True(t, manager.ClientIDExists(client2.ID))
+	assert.Equal(t, 2, manager.PlayerClientCount())
+	assert.True(t, manager.PlayerClientIDExists(client2.ID))
 
 	// Verify a join message was broadcast to client
 	select {
@@ -227,15 +228,15 @@ func TestManager_Start_Register(t *testing.T) {
 
 func TestManager_Start_Unregister(t *testing.T) {
 	const playerName = "testPlayer"
-	manager := socket.NewManager()
+	manager := socket.NewManager(&webserver.QuestionStore{})
 
 	// Create a client1
 	client1 := createTestClient(t, playerName)
 	client2 := createTestClient(t, "player2")
 
 	// Add the client directly to the manager
-	manager.Clients[client1.ID] = client1
-	manager.Clients[client2.ID] = client2
+	manager.PlayerCients[client1.ID] = client1
+	manager.PlayerCients[client2.ID] = client2
 	// Add player to the liveGameStore
 	manager.LiveGameStore.AddPlayer(playerName)
 	manager.LiveGameStore.AddPlayer("player2")
@@ -252,8 +253,8 @@ func TestManager_Start_Unregister(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Verify the client was unregistered
-	assert.Equal(t, 1, manager.ClientCount())
-	assert.False(t, manager.ClientIDExists(client1.ID))
+	assert.Equal(t, 1, manager.PlayerClientCount())
+	assert.False(t, manager.PlayerClientIDExists(client1.ID))
 
 	// Verify player was removed from gamestore
 	assert.False(t, manager.LiveGameStore.PlayerExistsByName(playerName))
@@ -273,15 +274,15 @@ func TestManager_Start_Unregister(t *testing.T) {
 }
 
 func TestManager_Start_Broadcast(t *testing.T) {
-	manager := socket.NewManager()
+	manager := socket.NewManager(&webserver.QuestionStore{})
 
 	// Create clients
 	client1 := createTestClient(t, "testUser")
 	client2 := createTestClient(t, "testUser")
 
 	// Add clients to the manager
-	manager.Clients[client1.ID] = client1
-	manager.Clients[client2.ID] = client2
+	manager.PlayerCients[client1.ID] = client1
+	manager.PlayerCients[client2.ID] = client2
 
 	// Start the manager in a goroutine
 	go func() {
@@ -318,7 +319,7 @@ func TestManager_Start_Broadcast(t *testing.T) {
 }
 
 func TestManager_Start_BroadcastFullBuffer(t *testing.T) {
-	manager := socket.NewManager()
+	manager := socket.NewManager(&webserver.QuestionStore{})
 
 	// Create a client with a full send buffer
 	client := createTestClient(t, "testUser")
@@ -332,7 +333,7 @@ func TestManager_Start_BroadcastFullBuffer(t *testing.T) {
 	}
 
 	// Add client to the manager
-	manager.Clients[client.ID] = client
+	manager.PlayerCients[client.ID] = client
 
 	// Start the manager in a goroutine
 	go func() {
@@ -353,5 +354,5 @@ func TestManager_Start_BroadcastFullBuffer(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Verify the client was unregistered due to full buffer
-	assert.Equal(t, 0, manager.ClientCount())
+	assert.Equal(t, 0, manager.PlayerClientCount())
 }

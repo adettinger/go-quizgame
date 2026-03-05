@@ -13,13 +13,13 @@ import (
 const QuizTimeout = time.Duration(30 * time.Second)
 
 type QuizController struct {
-	ds *webserver.DataStore
+	ds *webserver.QuestionStore
 	qs *webserver.QuizService
 	ss *webserver.SessionStore
 }
 
 // Note: Instantiates a quizService
-func NewQuizController(ds *webserver.DataStore) *QuizController {
+func NewQuizController(ds *webserver.QuestionStore) *QuizController {
 	ss := webserver.NewSessionStore()
 	return &QuizController{
 		ds: ds,

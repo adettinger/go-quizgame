@@ -14,10 +14,10 @@ import (
 )
 
 type ProblemController struct {
-	ds *webserver.DataStore
+	ds *webserver.QuestionStore
 }
 
-func NewProblemController(ds *webserver.DataStore) *ProblemController {
+func NewProblemController(ds *webserver.QuestionStore) *ProblemController {
 	return &ProblemController{
 		ds: ds,
 	}

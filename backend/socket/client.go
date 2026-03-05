@@ -33,6 +33,7 @@ type Client struct {
 }
 
 type UserData struct {
+	IsHost   bool
 	PlayerId uuid.UUID
 	Name     string
 }

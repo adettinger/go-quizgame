@@ -24,7 +24,7 @@ var uuids []uuid.UUID = func() []uuid.UUID {
 	return toReturn
 }()
 
-var ds = DataStore{
+var ds = QuestionStore{
 	fileName: "test",
 	problems: problems,
 	mu:       sync.RWMutex{},
@@ -34,12 +34,12 @@ var ds = DataStore{
 func TestProblemIdExists(t *testing.T) {
 	t.Run("UUID exists", func(t *testing.T) {
 		AssertEquals(t, uuids[0], uuid.MustParse("c620af48-3af0-4216-a229-65c539a00202"))
-		result := ds.problemIdExists(uuids[0])
+		result := ds.ProblemIdExists(uuids[0])
 		AssertEquals(t, result, true)
 	})
 
 	t.Run("UUID does not exist", func(t *testing.T) {
-		result := ds.problemIdExists(uuid.MustParse("c620af48-3af0-4216-a229-65c539a00000"))
+		result := ds.ProblemIdExists(uuid.MustParse("c620af48-3af0-4216-a229-65c539a00000"))
 		AssertEquals(t, result, false)
 	})
 }

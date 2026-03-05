@@ -1,33 +1,39 @@
 package socket
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"sync"
 
 	livegame "github.com/adettinger/go-quizgame/liveGame"
 	"github.com/adettinger/go-quizgame/models"
+	"github.com/adettinger/go-quizgame/webserver"
 	"github.com/google/uuid"
 )
 
 // Manager manages WebSocket connections
 type Manager struct {
-	Clients       map[uuid.UUID]*Client
+	PlayerCients  map[uuid.UUID]*Client
+	HostClient    *Client
 	Register      chan *Client
 	Unregister    chan *Client
 	Broadcast     chan models.Message
 	LiveGameStore *livegame.LiveGameStore
+	QuestionStore *webserver.QuestionStore
 	mutex         sync.RWMutex
 }
 
 // Creates a new WebSocket manager
-func NewManager() *Manager {
+func NewManager(qs *webserver.QuestionStore) *Manager {
 	return &Manager{
-		Clients:       make(map[uuid.UUID]*Client),
+		PlayerCients:  make(map[uuid.UUID]*Client),
+		HostClient:    nil,
 		Register:      make(chan *Client),
 		Unregister:    make(chan *Client),
 		Broadcast:     make(chan models.Message),
 		LiveGameStore: livegame.NewLiveGameStore(),
+		QuestionStore: qs,
 	}
 }
 
@@ -37,9 +43,9 @@ func (m *Manager) Start() {
 		select {
 		case client := <-m.Register:
 			func() {
+				// TODO: Check for error response when adding clients
 				m.AddClient(client)
 				client.Logf("Client added to manager")
-
 			}()
 			go func() {
 				log.Printf("Broadcasting join message for %s", client.UserData.Name)
@@ -50,7 +56,7 @@ func (m *Manager) Start() {
 				))
 			}()
 		case client := <-m.Unregister:
-			if _, ok := m.Clients[client.ID]; ok {
+			if _, ok := m.PlayerCients[client.ID]; ok {
 				leaveMsg := models.CreateMessage(
 					models.MessageTypeLeave,
 					client.UserData.Name,
@@ -58,7 +64,7 @@ func (m *Manager) Start() {
 				func() {
 					m.mutex.Lock()
 					defer m.mutex.Unlock()
-					delete(m.Clients, client.ID)
+					delete(m.PlayerCients, client.ID)
 					close(client.Send)
 					client.Logf("Client disconnected: %s")
 				}()
@@ -79,8 +85,11 @@ func (m *Manager) Start() {
 				m.mutex.Lock()
 				defer m.mutex.Unlock()
 
-				clients = make(map[uuid.UUID]*Client, len(m.Clients))
-				for id, client := range m.Clients {
+				clients = make(map[uuid.UUID]*Client, len(m.PlayerCients)+1)
+				if m.HostClient != nil {
+					clients[m.HostClient.ID] = m.HostClient
+				}
+				for id, client := range m.PlayerCients {
 					clients[id] = client
 				}
 			}()
@@ -109,7 +118,7 @@ func (m *Manager) Start() {
 // SendToClient sends a message to a specific client
 func (m *Manager) SendToClient(clientID uuid.UUID, message models.Message) bool {
 	m.mutex.Lock()
-	client, exists := m.Clients[clientID]
+	client, exists := m.PlayerCients[clientID]
 	m.mutex.Unlock()
 
 	if !exists {
@@ -126,36 +135,51 @@ func (m *Manager) BroadcastMessage(message models.Message) {
 	m.Broadcast <- message
 }
 
-// ClientCount returns the number of connected clients
-func (m *Manager) ClientCount() int {
+// PlayerClientCount returns the number of connected clients
+func (m *Manager) PlayerClientCount() int {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
-	return len(m.Clients)
+	return len(m.PlayerCients)
 }
 
 func (m *Manager) CreateNewClientID() uuid.UUID {
 	for {
 		id := uuid.New()
-		if !m.ClientIDExists(id) {
+		if !m.PlayerClientIDExists(id) {
 			return id
 		}
 	}
 }
 
-func (m *Manager) ClientIDExists(id uuid.UUID) bool {
+func (m *Manager) PlayerClientIDExists(id uuid.UUID) bool {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
-	_, ok := m.Clients[id]
+	_, ok := m.PlayerCients[id]
 	return ok
 }
 
 func (m *Manager) AddClient(client *Client) error {
-	if m.ClientIDExists(client.ID) {
-		return fmt.Errorf("Client already exists with ID: %v", client.ID.String())
+	m.mutex.RLock()
+	hasHost := m.HostClient != nil
+	m.mutex.RUnlock()
+	if client.UserData.IsHost {
+		if hasHost {
+			return errors.New("Game already has a host")
+		}
+		m.mutex.Lock()
+		defer m.mutex.Unlock()
+		m.HostClient = client
+	} else {
+		// if !hasHost {
+		// 	return errors.New("Need host before player client can be added")
+		// }
+		if m.PlayerClientIDExists(client.ID) {
+			return fmt.Errorf("Client already exists with ID: %v", client.ID.String())
+		}
+		m.mutex.Lock()
+		defer m.mutex.Unlock()
+		m.PlayerCients[client.ID] = client
 	}
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-	m.Clients[client.ID] = client
 	return nil
 }
