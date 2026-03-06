@@ -32,7 +32,7 @@ func NewManager(qs *webserver.QuestionStore) *Manager {
 		Register:      make(chan *Client),
 		Unregister:    make(chan *Client),
 		Broadcast:     make(chan models.Message),
-		LiveGameStore: livegame.NewLiveGameStore(),
+		LiveGameStore: livegame.NewLiveGameStore(qs),
 		QuestionStore: qs,
 	}
 }

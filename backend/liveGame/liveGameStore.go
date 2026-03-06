@@ -6,7 +6,9 @@ import (
 	"slices"
 	"sync"
 
+	"github.com/adettinger/go-quizgame/models"
 	"github.com/adettinger/go-quizgame/types"
+	"github.com/adettinger/go-quizgame/webserver"
 	"github.com/google/uuid"
 )
 
@@ -24,6 +26,14 @@ const (
 	GameStatusDone     GameStatus = "done"
 )
 
+type QuestionStatus string
+
+const (
+	QuestionStatusNotStarted QuestionStatus = "not_started"
+	QuestionStatusGathering  QuestionStatus = "gathering"
+	QuestionStatusResults    QuestionStatus = "results"
+)
+
 type LiveGameStore struct {
 	players         []LivePlayer
 	mutex           sync.RWMutex
@@ -31,10 +41,12 @@ type LiveGameStore struct {
 	timeLimit       int
 	questionIds     []uuid.UUID
 	gameStatus      GameStatus
+	questionStore   *webserver.QuestionStore
+	questionStatus  QuestionStatus
 }
 
-func NewLiveGameStore() *LiveGameStore {
-	return &LiveGameStore{gameStatus: GameStatusNotSetup}
+func NewLiveGameStore(qs *webserver.QuestionStore) *LiveGameStore {
+	return &LiveGameStore{questionStore: qs, gameStatus: GameStatusNotSetup, questionStatus: QuestionStatusNotStarted}
 }
 
 func (lgs *LiveGameStore) SetupGameOptions(timeLimit int, qIds []uuid.UUID) error {
@@ -59,6 +71,7 @@ func (lgs *LiveGameStore) KillGame() {
 	lgs.timeLimit = 0
 	lgs.questionIds = nil // or make([]uuid.UUID, 0)
 	lgs.gameStatus = GameStatusNotSetup
+	lgs.questionStatus = QuestionStatusNotStarted
 }
 
 func (lgs *LiveGameStore) AddPlayer(name string) (uuid.UUID, error) {
@@ -140,4 +153,45 @@ func (lsg *LiveGameStore) CreatePlayerId() uuid.UUID {
 			return id
 		}
 	}
+}
+
+func (lgs *LiveGameStore) GetGameStatus() GameStatus {
+	lgs.mutex.RLock()
+	defer lgs.mutex.RUnlock()
+	return lgs.gameStatus
+}
+
+func (lgs *LiveGameStore) StartGame() error {
+	lgs.mutex.Lock()
+	defer lgs.mutex.Unlock()
+	if lgs.gameStatus != GameStatusSetup {
+		return fmt.Errorf("Cannot start game in status %v", lgs.gameStatus)
+	}
+	if len(lgs.players) < 1 {
+		return errors.New("Game cannot be started if 0 players")
+	}
+	lgs.gameStatus = GameStatusRunning
+	lgs.questionStatus = QuestionStatusGathering
+	lgs.currentQuestion = 0
+
+	return nil
+}
+
+func (lgs *LiveGameStore) CreateQuestionResponse() (models.MessageTypeQuestionContent, error) {
+	lgs.mutex.Lock()
+	defer lgs.mutex.Unlock()
+	if lgs.gameStatus != GameStatusRunning || lgs.questionStatus != QuestionStatusGathering {
+		return models.MessageTypeQuestionContent{}, fmt.Errorf("Cannot generate question response if Gamestatus: %v, questionStatus: %v", lgs.gameStatus, lgs.questionStatus)
+	}
+	if lgs.currentQuestion >= len(lgs.questionIds) {
+		return models.MessageTypeQuestionContent{}, fmt.Errorf("Current question out of bounds. CurrentQuestionIndex %d, questionIds: %v", lgs.currentQuestion, lgs.questionIds)
+	}
+	problem, err := lgs.questionStore.GetProblemById(lgs.questionIds[lgs.currentQuestion])
+	if err != nil {
+		return models.MessageTypeQuestionContent{}, fmt.Errorf("QuestionId does not exist %v", lgs.questionIds[lgs.currentQuestion])
+	}
+	return models.MessageTypeQuestionContent{
+		QuestionNumber: lgs.currentQuestion,
+		Question:       problem.Question,
+	}, nil
 }

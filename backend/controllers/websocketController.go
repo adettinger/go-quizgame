@@ -84,6 +84,7 @@ func (wsc *WebSocketController) HandleHostConnection(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request"})
 		return
 	}
+	// TODO: Validation can be moved to live game store?
 	for _, id := range questionIds {
 		if !wsc.manager.QuestionStore.ProblemIdExists(id) {
 			c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request"})
@@ -137,6 +138,12 @@ func (wsc *WebSocketController) HandleHostConnection(c *gin.Context) {
 	go wsc.readPump(client)
 	go wsc.writePump(client)
 	client.Logf("Host Read/Write pumps started")
+
+	client.Send <- models.CreateMessage(
+		models.MessageTypePlayerList,
+		"System",
+		models.PlayerListMessageContent{Names: wsc.manager.LiveGameStore.GetPlayerNameList()},
+	)
 }
 
 // HandlePlayerConnection handles a new WebSocket connection
@@ -278,6 +285,38 @@ func (wsc *WebSocketController) readPump(client *socket.Client) {
 		case models.MessageTypeGameUpdate:
 			client.Logf("Broadcasting game update")
 			wsc.manager.BroadcastMessage(message)
+		case models.MessageTypeStartGame:
+			if !client.UserData.IsHost {
+				client.Logf("Non host cannot start game")
+				break
+			}
+			err = wsc.manager.LiveGameStore.StartGame()
+			if err != nil {
+				client.Logf("Failed to start game")
+				client.Send <- models.CreateMessage(
+					models.MessageTypeError,
+					"System",
+					models.MessageTextContent{Text: "Failed to start game"},
+				)
+				break
+			}
+			// Send question data to players
+			msgContent, err := wsc.manager.LiveGameStore.CreateQuestionResponse()
+			if err != nil {
+				client.Logf("Error creating question message: %v", err)
+				client.Send <- models.CreateMessage(
+					models.MessageTypeError,
+					"System",
+					models.MessageTextContent{Text: "Failed to start game"},
+				)
+				break
+			}
+			wsc.manager.Broadcast <- models.CreateMessage(
+				models.MessageTypeNextQuestion,
+				"System",
+				msgContent,
+			)
+
 		default:
 			client.Logf("Unknown message type: ", message.Type)
 		}

@@ -8,13 +8,20 @@ type MessageType string
 
 // Define your message types
 const (
-	MessageTypeChat       MessageType = "chat"
-	MessageTypeJoin       MessageType = "join"
-	MessageTypeLeave      MessageType = "leave"
-	MessageTypeGameUpdate MessageType = "game_update"
-	MessageTypeError      MessageType = "error"
-	MessageTypePlayerList MessageType = "player_list"
+	MessageTypeChat         MessageType = "chat"
+	MessageTypeJoin         MessageType = "join"
+	MessageTypeLeave        MessageType = "leave"
+	MessageTypeGameUpdate   MessageType = "game_update"
+	MessageTypeError        MessageType = "error"
+	MessageTypePlayerList   MessageType = "player_list"
+	MessageTypeStartGame    MessageType = "start"
+	MessageTypeNextQuestion MessageType = "question"
 )
+
+type MessageTypeQuestionContent struct {
+	QuestionNumber int    `json:"questionNumber"` //!!! What json type to use here
+	Question       string `json:"question"`
+}
 
 type MessageTextContent struct {
 	Text string `json:"Text"`

@@ -6,7 +6,9 @@ export enum messageType {
     Leave = "leave",
     GameUpdate = "game_update",
     Error = "error",
-    PlayerList = "player_list"
+    PlayerList = "player_list",
+    StartGame = "start",
+    ReceiveingQuestion = "question",
 }
 
 export interface MessageTextContent {
@@ -35,4 +37,17 @@ export enum ConnectionStatus {
 export interface Player {
     name: string;
     color: string;
+}
+
+export enum GameStatus {
+    NotStarted = "not_started",
+    Setup = "setup",
+    Running = "running",
+    Done = "done",
+}
+
+export enum QuestionStatus {
+    NotStarted = "not_started",
+    Gathering = "gathering",
+    Results = "results"
 }

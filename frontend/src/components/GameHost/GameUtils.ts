@@ -1,4 +1,4 @@
-import type { messageType, WebSocketMessage } from "./GameTypes";
+import { messageType, type WebSocketMessage } from "./GameTypes";
 
 export const playerColors: string[] = [
     // 'tomato', too close to red

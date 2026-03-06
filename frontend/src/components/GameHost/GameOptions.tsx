@@ -3,7 +3,7 @@ import * as Form from "@radix-ui/react-form";
 import { useEffect, useRef, useState } from "react";
 import { ProblemPicker } from "./ProblemPicker";
 import { QuestionMarkCircledIcon } from "@radix-ui/react-icons";
-import { ConnectionStatus, messageType, type Player, type WebSocketMessage } from "./GameTypes";
+import { ConnectionStatus, GameStatus, messageType, QuestionStatus, type Player, type WebSocketMessage } from "./GameTypes";
 import { ChatWindow, type chatMessage } from "../ChatWindow/ChatWindow";
 import { createTextMessage, getRandomColor, parseRawMessage, playerColors } from "./GameUtils";
 import { MessageLog } from "../MessageLog/MessageLog";
@@ -19,6 +19,9 @@ export function GameOptions() {
     const [playerList, setPlayerList] = useState<Player[]>([]);
     const [messages, setMessages] = useState<WebSocketMessage[]>([]);
     const [chatMessages, setChatMessages] = useState<chatMessage[]>([]);
+    const [gameStatus, setGameStatus] = useState<GameStatus>(GameStatus.NotStarted);
+    const [questionStatus, setQuestionStatus] = useState<QuestionStatus>(QuestionStatus.NotStarted);
+
 
 
     const socketRef = useRef<WebSocket | null>(null);
@@ -209,6 +212,14 @@ export function GameOptions() {
             socketRef.current.send(JSON.stringify(createTextMessage(messageType.Chat, message)));
         } else {
             addMessage(createTextMessage(messageType.Error, `Cannot send message: Connection not open. Connection status: ${connectionStatus}`));
+        }
+    };
+
+    const startGame = () => {
+        if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+            socketRef.current.send(JSON.stringify(createTextMessage(messageType.StartGame, "")));
+        } else {
+            addMessage(createTextMessage(messageType.Error, `Cannot start game: Connection not open. Connection status: ${connectionStatus}`));
         }
     };
 
