@@ -14,7 +14,7 @@ import (
 
 // Manager manages WebSocket connections
 type Manager struct {
-	PlayerCients  map[uuid.UUID]*Client
+	PlayerClients map[uuid.UUID]*Client
 	HostClient    *Client
 	Register      chan *Client
 	Unregister    chan *Client
@@ -27,7 +27,7 @@ type Manager struct {
 // Creates a new WebSocket manager
 func NewManager(qs *webserver.QuestionStore) *Manager {
 	return &Manager{
-		PlayerCients:  make(map[uuid.UUID]*Client),
+		PlayerClients: make(map[uuid.UUID]*Client),
 		HostClient:    nil,
 		Register:      make(chan *Client),
 		Unregister:    make(chan *Client),
@@ -47,16 +47,18 @@ func (m *Manager) Start() {
 				m.AddClient(client)
 				client.Logf("Client added to manager")
 			}()
-			go func() {
-				log.Printf("Broadcasting join message for %s", client.UserData.Name)
-				m.BroadcastMessage(models.CreateMessage(
-					models.MessageTypeJoin,
-					client.UserData.Name,
-					models.MessageTextContent{Text: "has joined the game"},
-				))
-			}()
+			if !client.UserData.IsHost {
+				go func() {
+					log.Printf("Broadcasting join message for %s", client.UserData.Name)
+					m.BroadcastMessage(models.CreateMessage(
+						models.MessageTypeJoin,
+						client.UserData.Name,
+						models.MessageTextContent{Text: "has joined the game"},
+					))
+				}()
+			}
 		case client := <-m.Unregister:
-			if _, ok := m.PlayerCients[client.ID]; ok {
+			if _, ok := m.PlayerClients[client.ID]; ok {
 				leaveMsg := models.CreateMessage(
 					models.MessageTypeLeave,
 					client.UserData.Name,
@@ -64,7 +66,7 @@ func (m *Manager) Start() {
 				func() {
 					m.mutex.Lock()
 					defer m.mutex.Unlock()
-					delete(m.PlayerCients, client.ID)
+					delete(m.PlayerClients, client.ID)
 					close(client.Send)
 					client.Logf("Client disconnected: %s")
 				}()
@@ -76,6 +78,31 @@ func (m *Manager) Start() {
 					m.BroadcastMessage(leaveMsg)
 				}()
 			}
+			if m.HostClient != nil && m.HostClient.ID == client.ID {
+				log.Print("Host is leaving game")
+				leaveMsg := models.CreateMessage(
+					models.MessageTypeLeave,
+					"Host",
+					models.MessageTextContent{Text: "has left the game"})
+				func() {
+					m.mutex.Lock()
+					defer m.mutex.Unlock()
+					m.HostClient = nil
+					close(client.Send)
+					client.Logf("Client disconnected: %s")
+				}()
+
+				go func() {
+					// TODO: Removing player from game store can be done in controller that writes to unregister
+					log.Printf("Broadcasting leave message for %s", client.UserData.Name)
+					m.BroadcastMessage(leaveMsg)
+					for _, client := range m.PlayerClients {
+						m.Unregister <- client
+					}
+					m.LiveGameStore.KillGame()
+				}()
+				log.Print("Killed game")
+			}
 		case message := <-m.Broadcast:
 			log.Printf("Broadcasting message of type %s from %s", message.Type, message.PlayerName)
 
@@ -85,11 +112,11 @@ func (m *Manager) Start() {
 				m.mutex.Lock()
 				defer m.mutex.Unlock()
 
-				clients = make(map[uuid.UUID]*Client, len(m.PlayerCients)+1)
+				clients = make(map[uuid.UUID]*Client, len(m.PlayerClients)+1)
 				if m.HostClient != nil {
 					clients[m.HostClient.ID] = m.HostClient
 				}
-				for id, client := range m.PlayerCients {
+				for id, client := range m.PlayerClients {
 					clients[id] = client
 				}
 			}()
@@ -118,7 +145,7 @@ func (m *Manager) Start() {
 // SendToClient sends a message to a specific client
 func (m *Manager) SendToClient(clientID uuid.UUID, message models.Message) bool {
 	m.mutex.Lock()
-	client, exists := m.PlayerCients[clientID]
+	client, exists := m.PlayerClients[clientID]
 	m.mutex.Unlock()
 
 	if !exists {
@@ -139,7 +166,7 @@ func (m *Manager) BroadcastMessage(message models.Message) {
 func (m *Manager) PlayerClientCount() int {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
-	return len(m.PlayerCients)
+	return len(m.PlayerClients)
 }
 
 func (m *Manager) CreateNewClientID() uuid.UUID {
@@ -155,7 +182,7 @@ func (m *Manager) PlayerClientIDExists(id uuid.UUID) bool {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
-	_, ok := m.PlayerCients[id]
+	_, ok := m.PlayerClients[id]
 	return ok
 }
 
@@ -171,6 +198,7 @@ func (m *Manager) AddClient(client *Client) error {
 		defer m.mutex.Unlock()
 		m.HostClient = client
 	} else {
+		// TODO: What if no host
 		// if !hasHost {
 		// 	return errors.New("Need host before player client can be added")
 		// }
@@ -179,7 +207,7 @@ func (m *Manager) AddClient(client *Client) error {
 		}
 		m.mutex.Lock()
 		defer m.mutex.Unlock()
-		m.PlayerCients[client.ID] = client
+		m.PlayerClients[client.ID] = client
 	}
 	return nil
 }

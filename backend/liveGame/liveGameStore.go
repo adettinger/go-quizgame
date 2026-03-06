@@ -49,6 +49,18 @@ func (lgs *LiveGameStore) SetupGameOptions(timeLimit int, qIds []uuid.UUID) erro
 	return nil
 }
 
+func (lgs *LiveGameStore) KillGame() {
+	lgs.mutex.Lock()
+	defer lgs.mutex.Unlock()
+
+	// Reset all fields to their initial state
+	lgs.players = nil // or make([]LivePlayer, 0)
+	lgs.currentQuestion = 0
+	lgs.timeLimit = 0
+	lgs.questionIds = nil // or make([]uuid.UUID, 0)
+	lgs.gameStatus = GameStatusNotSetup
+}
+
 func (lgs *LiveGameStore) AddPlayer(name string) (uuid.UUID, error) {
 	if lgs.PlayerExistsByName(name) {
 		return uuid.Nil, &types.ErrDuplicatePlayerName{PlayerName: name}

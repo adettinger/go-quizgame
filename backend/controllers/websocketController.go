@@ -54,12 +54,14 @@ func (wsc *WebSocketController) HandleHostConnection(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request"})
 		return
 	}
+	log.Printf("received request params: timeLimit: %v, questionIds", timeLimitParam, questionIdsParam)
 	// Parse fields
 	timeLimit, err := strconv.Atoi(timeLimitParam)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request"})
 		return
 	}
+	log.Printf("Parsed timeLimit: %d", timeLimit)
 
 	questionIdsStrings := strings.Split(questionIdsParam, ",")
 	questionIds := make([]uuid.UUID, len(questionIdsStrings))
@@ -71,6 +73,7 @@ func (wsc *WebSocketController) HandleHostConnection(c *gin.Context) {
 		}
 		questionIds[index] = id
 	}
+	log.Printf("Parsed questionIds: %v", questionIds)
 
 	// Validate options
 	if timeLimit < QuestionTimeMin || timeLimit > QuestionTimeMax {
@@ -87,6 +90,7 @@ func (wsc *WebSocketController) HandleHostConnection(c *gin.Context) {
 			return
 		}
 	}
+	log.Print("Passed param validation")
 	// TODO: Check for duplicate question Ids
 
 	isWebSocketRequest := c.IsWebsocket() ||
@@ -100,9 +104,11 @@ func (wsc *WebSocketController) HandleHostConnection(c *gin.Context) {
 		})
 		return
 	}
+
 	// Update liveGameStore with options
 	err = wsc.manager.LiveGameStore.SetupGameOptions(timeLimit, questionIds)
 	if err != nil {
+		log.Print("Failed to setup game options: %v", err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to setup game options"})
 		return
 	}

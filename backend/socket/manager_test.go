@@ -37,7 +37,7 @@ func TestNewManager(t *testing.T) {
 	manager := socket.NewManager(&webserver.QuestionStore{})
 
 	assert.NotNil(t, manager)
-	assert.NotNil(t, manager.PlayerCients)
+	assert.NotNil(t, manager.PlayerClients)
 	assert.NotNil(t, manager.Register)
 	assert.NotNil(t, manager.Unregister)
 	assert.NotNil(t, manager.Broadcast)
@@ -53,7 +53,7 @@ func TestManager_ClientCount(t *testing.T) {
 
 	// Add a client
 	client := createTestClient(t, "testUser")
-	manager.PlayerCients[client.ID] = client
+	manager.PlayerClients[client.ID] = client
 
 	assert.Equal(t, 1, manager.PlayerClientCount())
 }
@@ -99,7 +99,7 @@ func TestManager_ClientIDExists(t *testing.T) {
 
 	// Create a client
 	client := createTestClient(t, "testUser")
-	manager.PlayerCients[client.ID] = client
+	manager.PlayerClients[client.ID] = client
 
 	// Check if the client ID exists
 	assert.True(t, manager.PlayerClientIDExists(client.ID))
@@ -113,7 +113,7 @@ func TestManager_SendToClient(t *testing.T) {
 
 	// Create a client
 	client := createTestClient(t, "testUser")
-	manager.PlayerCients[client.ID] = client
+	manager.PlayerClients[client.ID] = client
 
 	// Create a message
 	message := models.CreateMessage(
@@ -235,8 +235,8 @@ func TestManager_Start_Unregister(t *testing.T) {
 	client2 := createTestClient(t, "player2")
 
 	// Add the client directly to the manager
-	manager.PlayerCients[client1.ID] = client1
-	manager.PlayerCients[client2.ID] = client2
+	manager.PlayerClients[client1.ID] = client1
+	manager.PlayerClients[client2.ID] = client2
 	// Add player to the liveGameStore
 	manager.LiveGameStore.AddPlayer(playerName)
 	manager.LiveGameStore.AddPlayer("player2")
@@ -281,8 +281,8 @@ func TestManager_Start_Broadcast(t *testing.T) {
 	client2 := createTestClient(t, "testUser")
 
 	// Add clients to the manager
-	manager.PlayerCients[client1.ID] = client1
-	manager.PlayerCients[client2.ID] = client2
+	manager.PlayerClients[client1.ID] = client1
+	manager.PlayerClients[client2.ID] = client2
 
 	// Start the manager in a goroutine
 	go func() {
@@ -333,7 +333,7 @@ func TestManager_Start_BroadcastFullBuffer(t *testing.T) {
 	}
 
 	// Add client to the manager
-	manager.PlayerCients[client.ID] = client
+	manager.PlayerClients[client.ID] = client
 
 	// Start the manager in a goroutine
 	go func() {

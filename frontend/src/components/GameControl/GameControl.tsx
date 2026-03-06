@@ -11,7 +11,7 @@ import { PlayerBadgeList } from "../PlayerBadgeList";
 export function GameControl() {
     const [playerList, setPlayerList] = useState<Player[]>([]);
     const [messages, setMessages] = useState<WebSocketMessage[]>([]);
-    const [chatMessages, setChatMessages] = useState<chatMessage[]>([])
+    const [chatMessages, setChatMessages] = useState<chatMessage[]>([]);
 
     const socketRef = useRef<WebSocket | null>(null);
 
